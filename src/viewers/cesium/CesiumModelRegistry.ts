@@ -7,6 +7,7 @@ import { Model, Color, ColorBlendMode, Cartesian3, Cartographic, Math as CesiumM
 import { getCesiumViewer } from './CesiumViewer';
 import type { LayerSymbology } from '../../types/symbology';
 import { useLayerStore } from '../../stores/useLayerStore';
+import { useSpatialCatalogStore } from '../../stores/useSpatialCatalogStore';
 
 /** Active highlight timer — tracks current flash animation */
 let highlightTimer: ReturnType<typeof setTimeout> | null = null;
@@ -217,17 +218,19 @@ export function highlightModel(layerId: string): void {
   blink();
 }
 
-// ═══ Distance-Based Culling ═══
+// ═══ Distance-Based Culling with GPU Memory Unloading ═══
 
-const MAX_VISIBLE_MODELS = 500;
-const CULL_DEBOUNCE_MS = 1000;
+const MAX_VISIBLE_MODELS = 300;
+const MAX_GPU_MODELS = 600;
+const CULL_DEBOUNCE_MS = 800;
 let cullTimer: ReturnType<typeof setTimeout> | null = null;
 let cullListenerActive = false;
 
 /**
- * Start distance-based model culling.
- * Hides models far from camera, keeping at most MAX_VISIBLE_MODELS visible.
- * Call once after viewer is initialized.
+ * Start distance-based model culling with actual GPU memory unloading.
+ * - Nearest MAX_VISIBLE_MODELS: visible
+ * - Up to MAX_GPU_MODELS: hidden (warm GPU cache)
+ * - Beyond MAX_GPU_MODELS: destroyed (freed from GPU, can be re-loaded from GLB cache)
  */
 export function startDistanceCulling(): void {
   const viewer = getCesiumViewer();
@@ -250,11 +253,10 @@ function performCull(): void {
   const cameraPos = viewer.camera.positionWC;
   const layers = useLayerStore.getState().layers;
 
-  // Build distance list for all registered models
-  const distances: { layerId: string; dist: number; visible: boolean }[] = [];
+  const distances: { layerId: string; dist: number }[] = [];
   for (const [layerId, model] of registry) {
     const layer = layers.find((l) => l.id === layerId);
-    if (!layer || !layer.visible) continue; // skip user-hidden layers
+    if (!layer || !layer.visible) continue;
 
     const modelPos = model.modelMatrix
       ? Cartesian3.fromElements(
@@ -264,22 +266,44 @@ function performCull(): void {
         )
       : cameraPos;
 
-    const dist = Cartesian3.distance(cameraPos, modelPos);
-    distances.push({ layerId, dist, visible: model.show });
+    distances.push({ layerId, dist: Cartesian3.distance(cameraPos, modelPos) });
   }
 
-  // Sort by distance (nearest first)
   distances.sort((a, b) => a.dist - b.dist);
 
-  // Show nearest MAX_VISIBLE_MODELS, hide the rest
   let changed = false;
+  const toDestroy: string[] = [];
+
   for (let i = 0; i < distances.length; i++) {
-    const shouldShow = i < MAX_VISIBLE_MODELS;
-    const model = registry.get(distances[i].layerId);
-    if (model && model.show !== shouldShow) {
-      model.show = shouldShow;
-      changed = true;
+    const { layerId } = distances[i];
+    const model = registry.get(layerId);
+    if (!model) continue;
+
+    if (i < MAX_VISIBLE_MODELS) {
+      // Inner ring: visible
+      if (!model.show) { model.show = true; changed = true; }
+    } else if (i < MAX_GPU_MODELS) {
+      // Middle ring: hidden but kept in GPU
+      if (model.show) { model.show = false; changed = true; }
+    } else {
+      // Outer ring: destroy to free GPU memory
+      toDestroy.push(layerId);
     }
+  }
+
+  // Destroy distant models and reset catalog status for re-loading
+  if (toDestroy.length > 0) {
+    for (const layerId of toDestroy) {
+      const model = registry.get(layerId);
+      if (model) {
+        viewer.scene.primitives.remove(model);
+        registry.delete(layerId);
+        // Reset catalog entry so ViewDependentLoader can re-load it
+        useSpatialCatalogStore.getState().markUnloaded(layerId);
+      }
+    }
+    changed = true;
+    console.log(`[CullEngine] Destroyed ${toDestroy.length} distant models (GPU memory freed)`);
   }
 
   if (changed) viewer.scene.requestRender();

@@ -38,6 +38,7 @@ interface SpatialCatalogState {
   markLoading: (filePaths: string[]) => void;
   markLoaded: (filePath: string, layerId: string) => void;
   markFailed: (filePath: string) => void;
+  markUnloaded: (layerId: string) => void;
   setScanning: (v: boolean) => void;
   setViewLoading: (v: boolean) => void;
   clear: () => void;
@@ -85,6 +86,13 @@ export const useSpatialCatalogStore = create<SpatialCatalogState>((set, get) => 
     set((s) => ({
       entries: s.entries.map((e) =>
         e.filePath === filePath ? { ...e, status: 'failed' as const } : e
+      ),
+    })),
+
+  markUnloaded: (layerId) =>
+    set((s) => ({
+      entries: s.entries.map((e) =>
+        e.layerId === layerId ? { ...e, status: 'pending' as const, layerId: undefined } : e
       ),
     })),
 

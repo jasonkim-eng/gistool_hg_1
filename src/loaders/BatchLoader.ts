@@ -15,12 +15,16 @@
 import { scanHeaders } from './BatchScanner';
 import { loadSingleOBJ, workerLoop, flushPendingLayers } from './BatchWorker';
 import { prewarmTextureCache, clearAllCaches } from './BatchCacheManager';
+import { startViewDependentLoading } from './ViewDependentLoader';
 import { flyTo, requestRender } from '../viewers/cesium/CesiumAdapter';
 import { useLayerStore } from '../stores/useLayerStore';
 import { useViewerStore } from '../stores/useViewerStore';
 import { useBatchStore } from '../stores/useBatchStore';
 import { useSpatialCatalogStore, type CatalogEntry } from '../stores/useSpatialCatalogStore';
 import { BATCH } from '../config/defaults';
+
+/** Threshold: batches larger than this use view-dependent loading */
+const VIEW_DEPENDENT_THRESHOLD = 500;
 
 // ── State ──
 let currentAbortController: AbortController | null = null;
@@ -167,12 +171,22 @@ async function smartLoad(
     );
   }
 
-  useViewerStore.getState().setStatusMessage(
-    `✓ 스캔 완료: ${withCoords.length}개 좌표 확인 (${withoutCoords}개 미확인) — ${scanTime}초 | 백그라운드 로딩 시작`,
-  );
-
-  // ── Phase 2: Background loading ──
-  await backgroundLoadAll(catalogEntries, groupId, folderPath, folderName);
+  // ── Phase 2: Load models ──
+  if (objFiles.length > VIEW_DEPENDENT_THRESHOLD && withCoords.length > 0) {
+    // Large batch with geo-coordinates: use view-dependent loading
+    // Only loads models visible in the current camera viewport
+    useViewerStore.getState().setStatusMessage(
+      `✓ 스캔 완료: ${withCoords.length}개 좌표 확인 — ${scanTime}초 | 시야 기반 로딩 시작 (카메라 이동 시 자동 로딩)`,
+    );
+    console.log(`[BatchLoader] Using view-dependent loading for ${objFiles.length} files`);
+    startViewDependentLoading();
+  } else {
+    // Small batch or no coordinates: load all immediately
+    useViewerStore.getState().setStatusMessage(
+      `✓ 스캔 완료: ${withCoords.length}개 좌표 확인 (${withoutCoords}개 미확인) — ${scanTime}초 | 전체 로딩 시작`,
+    );
+    await backgroundLoadAll(catalogEntries, groupId, folderPath, folderName);
+  }
 }
 
 /**
