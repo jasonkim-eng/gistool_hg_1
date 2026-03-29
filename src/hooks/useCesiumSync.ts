@@ -10,6 +10,9 @@ import { setModelVisibility, setModelSymbology } from '../viewers/cesium/CesiumM
 import { setImageryVisibility, setImagerySymbology } from '../viewers/cesium/CesiumImageryRegistry';
 import { setDxfVisibility, setDxfSymbology } from '../loaders/DxfLoader';
 import { setShpVisibility, setShpSymbology } from '../loaders/ShapefileLoader';
+import { setGeoJsonVisibility, setGeoJsonSymbology } from '../loaders/GeoJsonLoader';
+import { setKmlVisibility, setKmlSymbology } from '../loaders/KmlLoader';
+import { setLasVisibility, setLasSymbology } from '../loaders/LasLoader';
 
 export function useCesiumSync(): void {
   const layers = useLayerStore((s) => s.layers);
@@ -44,6 +47,15 @@ function syncVisibility(layer: LayerItem): void {
     case 'SHP':
       setShpVisibility(layer.cesiumId!, layer.visible);
       break;
+    case 'GEOJSON':
+      setGeoJsonVisibility(layer.cesiumId!, layer.visible);
+      break;
+    case 'KML':
+      setKmlVisibility(layer.cesiumId!, layer.visible);
+      break;
+    case 'LAS':
+      setLasVisibility(layer.cesiumId!, layer.visible);
+      break;
     default:
       setModelVisibility(layer.cesiumId!, layer.visible);
       break;
@@ -60,6 +72,15 @@ function syncSymbology(layer: LayerItem, symbology: LayerSymbology): void {
       break;
     case 'SHP':
       setShpSymbology(layer.cesiumId!, symbology);
+      break;
+    case 'GEOJSON':
+      setGeoJsonSymbology(layer.cesiumId!, symbology);
+      break;
+    case 'KML':
+      setKmlSymbology(layer.cesiumId!, symbology);
+      break;
+    case 'LAS':
+      setLasSymbology(layer.cesiumId!, symbology);
       break;
     default:
       setModelSymbology(layer.cesiumId!, symbology);

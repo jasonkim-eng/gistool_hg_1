@@ -8,6 +8,9 @@ import * as THREE from 'three';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
+import { TDSLoader } from 'three/examples/jsm/loaders/TDSLoader.js';
+import { PLYLoader } from 'three/examples/jsm/loaders/PLYLoader.js';
+import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 import { Cartesian3 } from 'cesium';
 
 import {
@@ -51,6 +54,37 @@ async function parseWithThreeJS(
         reject(err);
       }
     });
+  } else if (ext === '.3ds') {
+    const loader = new TDSLoader();
+    return loader.parse(buffer, '');
+  } else if (ext === '.ply') {
+    const loader = new PLYLoader();
+    const geometry = loader.parse(buffer);
+    const hasVertexColors = geometry.hasAttribute('color');
+    const material = new THREE.MeshStandardMaterial({
+      color: MODEL_DEFAULTS.DEFAULT_MATERIAL_COLOR,
+      vertexColors: hasVertexColors,
+      metalness: MODEL_DEFAULTS.DEFAULT_METALNESS,
+      roughness: MODEL_DEFAULTS.DEFAULT_ROUGHNESS,
+      side: THREE.DoubleSide,
+    });
+    const mesh = new THREE.Mesh(geometry, material);
+    const group = new THREE.Group();
+    group.add(mesh);
+    return group;
+  } else if (ext === '.stl') {
+    const loader = new STLLoader();
+    const geometry = loader.parse(buffer);
+    const material = new THREE.MeshStandardMaterial({
+      color: MODEL_DEFAULTS.DEFAULT_MATERIAL_COLOR,
+      metalness: MODEL_DEFAULTS.DEFAULT_METALNESS,
+      roughness: MODEL_DEFAULTS.DEFAULT_ROUGHNESS,
+      side: THREE.DoubleSide,
+    });
+    const mesh = new THREE.Mesh(geometry, material);
+    const group = new THREE.Group();
+    group.add(mesh);
+    return group;
   } else {
     throw new Error(`Unsupported format: ${ext}`);
   }
@@ -138,8 +172,9 @@ export async function loadModelFile(
 
     const wrapper = new THREE.Group();
 
-    // For GIS OBJ files: convert Z-up → Y-up (glTF/Cesium)
-    if (fileExt === '.obj') {
+    // For Z-up formats: convert Z-up → Y-up (glTF/Cesium convention)
+    const zUpFormats = ['.obj', '.3ds', '.ply', '.stl'];
+    if (zUpFormats.includes(fileExt)) {
       threeScene.rotation.x = -Math.PI / 2;
       threeScene.updateMatrixWorld(true);
       const rotatedBox = new THREE.Box3().setFromObject(threeScene);
@@ -219,7 +254,7 @@ export function flyToLayer(layerId: string): void {
  * ModelFileLoader — IFileLoader implementation for OBJ/FBX files.
  */
 export const modelFileLoader: IFileLoader = {
-  supportedExtensions: ['.obj', '.fbx', '.gltf', '.glb'],
+  supportedExtensions: ['.obj', '.fbx', '.gltf', '.glb', '.3ds', '.ply', '.stl'],
   formatName: '3D Models',
   async load(filePath: string, buffer: ArrayBuffer | null): Promise<LoadResult> {
     if (!buffer) return { layerId: '', success: false, error: 'No buffer provided' };

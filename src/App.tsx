@@ -20,7 +20,8 @@ import { DEFAULT_GEO } from './config/defaults';
 registerAllLoaders();
 
 /** Extensions where the loader reads the file itself (no buffer needed from caller) */
-const SELF_READING_EXTENSIONS = new Set(['.tif', '.tiff', '.dxf', '.shp']);
+/** Extensions where the loader reads the file itself (no buffer needed from caller) */
+const SELF_READING_EXTENSIONS = new Set(['.tif', '.tiff', '.dxf', '.shp', '.las']);
 
 const App: React.FC = () => {
   useCesiumSync();

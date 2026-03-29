@@ -38,14 +38,20 @@ export function prepareForExport(scene: THREE.Object3D): void {
     if (srcMat.type === 'MeshStandardMaterial') {
       const stdMat = srcMat as THREE.MeshStandardMaterial;
       stdMat.map = sanitizeTextureForExport(stdMat.map);
+      // Preserve vertex colors if geometry has color attribute
+      if (child instanceof THREE.Mesh && child.geometry?.hasAttribute('color')) {
+        stdMat.vertexColors = true;
+      }
       stdMat.needsUpdate = true;
       return;
     }
 
     const phong = srcMat as THREE.MeshPhongMaterial;
+    const hasVertexColors = child instanceof THREE.Mesh && child.geometry?.hasAttribute('color');
     const stdMat = new THREE.MeshStandardMaterial({
       color: phong.color || new THREE.Color(MODEL_DEFAULTS.DEFAULT_MATERIAL_COLOR),
       map: sanitizeTextureForExport(phong.map),
+      vertexColors: hasVertexColors || (phong as any).vertexColors || false,
       metalness: MODEL_DEFAULTS.DEFAULT_METALNESS,
       roughness: MODEL_DEFAULTS.DEFAULT_ROUGHNESS,
       side: THREE.DoubleSide,

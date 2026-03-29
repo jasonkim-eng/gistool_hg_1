@@ -19,6 +19,7 @@ const DEFAULTS: Record<string, LayerSymbology> = {
   MODEL: { color: '#FFFFFF', opacity: 1.0, lineWidth: 1.5, pointSize: 4 },
   GEOTIFF: { color: '#FFFFFF', opacity: 1.0, lineWidth: 1.5, pointSize: 4 },
   VECTOR: { color: '#FFFFFF', opacity: 1.0, lineWidth: 1.5, pointSize: 4 },
+  POINTCLOUD: { color: '#FFFFFF', opacity: 1.0, lineWidth: 1.5, pointSize: 2 },
 };
 
 export function getDefaultSymbology(type: LayerType): LayerSymbology {
@@ -27,7 +28,11 @@ export function getDefaultSymbology(type: LayerType): LayerSymbology {
       return { ...DEFAULTS.GEOTIFF };
     case 'DXF':
     case 'SHP':
+    case 'GEOJSON':
+    case 'KML':
       return { ...DEFAULTS.VECTOR };
+    case 'LAS':
+      return { ...DEFAULTS.POINTCLOUD };
     default:
       return { ...DEFAULTS.MODEL };
   }

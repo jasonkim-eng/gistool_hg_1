@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { LayerSymbology } from '../types/symbology';
 
-export type LayerType = 'OBJ' | 'FBX' | 'GLTF' | 'GLB' | 'GEOTIFF' | 'DXF' | 'SHP';
+export type LayerType = 'OBJ' | 'FBX' | 'GLTF' | 'GLB' | 'GEOTIFF' | 'DXF' | 'SHP' | '3DS' | 'PLY' | 'STL' | 'GEOJSON' | 'KML' | 'LAS';
 
 export interface LayerItem {
   id: string;

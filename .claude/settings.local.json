@@ -9,7 +9,16 @@
       "Bash(node:*)",
       "Bash(cat:*)",
       "Bash(git commit:*)",
-      "Bash(git config:*)"
+      "Bash(git config:*)",
+      "Bash(find /c/workspace/GIS_tool_3/node_modules/cesium -maxdepth 3 -type f -name *Geo*.js -o -name *Kml*.js -o -name *Kmz*.js)",
+      "Bash(find /c/workspace/GIS_tool_3/node_modules/cesium/Source -name *DataSource*.js)",
+      "Bash(xargs grep:*)",
+      "Bash(find /c/workspace/GIS_tool_3/src -type f -name *.ts -o -name *.js)",
+      "Bash(grep -r \"LAS\\\\|LAZ\\\\|las-js\\\\|loaders.gl\\\\|copc\" /c/workspace/GIS_tool_3/src --include=*.ts --include=*.js)",
+      "Bash(ls C:/workspace/GIS_tool_3/node_modules/three/examples/jsm/loaders/TDSLoader*)",
+      "Bash(ls C:/workspace/GIS_tool_3/node_modules/three/examples/jsm/loaders/PLYLoader*)",
+      "Bash(ls C:/workspace/GIS_tool_3/node_modules/three/examples/jsm/loaders/STLLoader*)",
+      "Bash(grep -l \"GeoJsonDataSource\\\\|KmlDataSource\" C:/workspace/GIS_tool_3/node_modules/cesium/Source/DataSources/*.js)"
     ]
   }
 }

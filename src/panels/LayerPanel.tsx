@@ -6,6 +6,9 @@ import { unregisterModel, highlightModel } from '../viewers/cesium/CesiumModelRe
 import { removeImagery } from '../viewers/cesium/CesiumImageryRegistry';
 import { removeDxfEntities } from '../loaders/DxfLoader';
 import { removeShpEntities } from '../loaders/ShapefileLoader';
+import { removeGeoJsonEntities } from '../loaders/GeoJsonLoader';
+import { removeKmlEntities } from '../loaders/KmlLoader';
+import { removeLasPoints } from '../loaders/LasLoader';
 import { LAYER_PANEL } from '../config/defaults';
 
 const VIRTUAL_THRESHOLD = 200;
@@ -17,6 +20,7 @@ interface LayerPanelProps {
 
 const typeIcons: Record<string, string> = {
   OBJ: '🔷', FBX: '🔶', GLTF: '🟢', GLB: '🟢', GEOTIFF: '🗺️', DXF: '📐', SHP: '📊',
+  '3DS': '🔻', PLY: '🔵', STL: '⬡', GEOJSON: '🌐', KML: '📍', LAS: '☁️',
 };
 
 type SortMode = 'default' | 'name-asc' | 'name-desc' | 'visible-first' | 'hidden-first' | 'coord-x' | 'coord-y' | 'coord-z';
@@ -190,6 +194,12 @@ const LayerPanel: React.FC<LayerPanelProps> = ({ onZoomToLayer }) => {
         removeDxfEntities(id);
       } else if (layer?.type === 'SHP') {
         removeShpEntities(id);
+      } else if (layer?.type === 'GEOJSON') {
+        removeGeoJsonEntities(id);
+      } else if (layer?.type === 'KML') {
+        removeKmlEntities(id);
+      } else if (layer?.type === 'LAS') {
+        removeLasPoints(id);
       } else {
         unregisterModel(id, true);
       }
