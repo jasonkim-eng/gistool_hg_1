@@ -1,0 +1,228 @@
+/* ═══════════════════════════════════════════════════
+   GeoStudio X — Design System
+   Professional GIS Dark Theme
+   ═══════════════════════════════════════════════════ */
+
+/* ── Component CSS Imports ── */
+@import './layout/RibbonToolbar.css';
+@import './layout/StatusBar.css';
+@import './panels/LayerPanel.css';
+@import './components/modals.css';
+@import './components/contextMenu.css';
+@import './panels/SymbologyPopover.css';
+
+/* ── CSS Variables ── */
+:root {
+  /* Core Palette */
+  --bg-primary: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-tertiary: #1c2333;
+  --bg-panel: #1a1f2e;
+  --bg-hover: #252d3a;
+  --bg-active: #2a3443;
+  --bg-ribbon: #0f1724;
+  --bg-ribbon-tab: #182236;
+  --bg-ribbon-tab-active: #1e3a5f;
+
+  /* Accent */
+  --accent-primary: #4a9eff;
+  --accent-secondary: #38bdf8;
+  --accent-gradient: linear-gradient(135deg, #4a9eff 0%, #38bdf8 100%);
+  --accent-glow: 0 0 20px rgba(74, 158, 255, 0.25);
+
+  /* Text */
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted: #6e7681;
+  --text-accent: #4a9eff;
+
+  /* Borders */
+  --border-primary: #30363d;
+  --border-subtle: #21262d;
+  --border-accent: #4a9eff40;
+
+  /* Status */
+  --status-success: #3fb950;
+  --status-warning: #d29922;
+  --status-error: #f85149;
+  --status-info: #4a9eff;
+
+  /* Sizing */
+  --ribbon-height: 100px;
+  --statusbar-height: 28px;
+  --panel-header-height: 32px;
+
+  /* Typography */
+  --font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
+  --font-mono: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-md: 13px;
+  --font-size-lg: 14px;
+
+  /* Transitions */
+  --transition-fast: 120ms ease;
+  --transition-normal: 200ms ease;
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+}
+
+/* ── Global Reset ── */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-md);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-primary);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* ── App Layout ── */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--bg-primary);
+}
+
+.app-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ═══ Cesium Viewer ═══ */
+.cesium-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: #000;
+}
+
+.cesium-container .cesium-viewer {
+  width: 100%;
+  height: 100%;
+}
+
+/* Hide default Cesium UI chrome */
+.cesium-viewer-bottom,
+.cesium-viewer-animationContainer,
+.cesium-viewer-timelineContainer,
+.cesium-viewer-fullscreenContainer {
+  display: none !important;
+}
+
+/* ═══ Drop Zone Overlay ═══ */
+.drop-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(74, 158, 255, 0.08);
+  border: 2px dashed var(--accent-primary);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  pointer-events: none;
+  backdrop-filter: blur(4px);
+  animation: dropPulse 1.5s ease infinite;
+}
+
+.drop-overlay-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--accent-primary);
+}
+
+.drop-overlay-content .icon {
+  font-size: 48px;
+}
+
+.drop-overlay-content .text {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+}
+
+.drop-overlay-content .subtext {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+@keyframes dropPulse {
+  0%, 100% { border-color: var(--accent-primary); }
+  50% { border-color: var(--accent-secondary); }
+}
+
+/* ═══ FlexLayout Overrides ═══ */
+.flexlayout__layout {
+  background: var(--bg-primary) !important;
+}
+
+.flexlayout__tab {
+  background: var(--bg-panel) !important;
+  border: none !important;
+  overflow: hidden;
+}
+
+.flexlayout__tabset {
+  background: var(--bg-secondary) !important;
+}
+
+.flexlayout__tabset_tabbar_outer {
+  background: var(--bg-tertiary) !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
+}
+
+.flexlayout__tab_button {
+  color: var(--text-secondary) !important;
+  font-size: var(--font-size-sm) !important;
+  font-family: var(--font-family) !important;
+  padding: 4px 12px !important;
+}
+
+.flexlayout__tab_button--selected {
+  color: var(--text-primary) !important;
+  background: var(--bg-panel) !important;
+}
+
+.flexlayout__splitter {
+  background: var(--border-primary) !important;
+}
+
+.flexlayout__splitter:hover {
+  background: var(--accent-primary) !important;
+}
+
+.flexlayout__border_inner_tab_container {
+  background: var(--bg-secondary) !important;
+}

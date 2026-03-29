@@ -1,0 +1,781 @@
+제품 비전과 포지셔닝
+2.1 제품 정의
+
+본 제품은 Windows Desktop 설치형 전문 GIS/Photogrammetry/LiDAR 통합 저작 및 분석 소프트웨어이다.
+대상 사용자는 다음과 같다.
+
+공간정보 제작사
+항공사진/정사 제작사
+LiDAR 처리 전문기업
+도시 디지털트윈 구축사
+국토/지자체/공공기관 GIS 부서
+시설물/도로/철도/전력/수자원 엔지니어링 조직
+2.2 제품 목표
+
+본 제품의 목표는 다음 네 가지를 동시에 만족하는 것이다.
+
+전문 제작 기능
+항공사진 AT, 정사영상, DSM/DTM, mesh, point cloud, vector/raster 편집
+분석 기능
+2D/3D 공간분석, terrain 분석, visibility, volumetrics, change detection, network/asset 분석
+AI 기능
+객체 추출, 분류, 세그멘테이션, 변화탐지, 보조 편집, 자동 QA/QC
+상용 제품성
+안정적 UI/UX, 라이선스 보안, 플러그인 확장성, 대용량 성능, 유지보수 용이성
+3. 기능 체계 개요
+
+본 제품의 전체 기능은 다음 10개 도메인으로 설계한다.
+
+데이터 입출력/프로젝트 관리
+2D GIS 시각화/편집
+3D GIS 시각화/편집
+항공사진/정사/포토그래메트리
+LiDAR/Point Cloud 처리
+AI 분석
+공간분석/지형분석
+품질검사(QA/QC)
+보안/라이선스/복제방지
+플랫폼/확장성/운영성
+
+이제 이를 FSD 형식으로 상세화한다.
+
+4. FSD (Functional Specification Document)
+4.1 문서 정보
+4.1.1 문서명
+
+신규 상용 GIS Desktop Software Functional Specification Document
+
+4.1.2 제품명(가칭)
+
+GeoStudio X
+
+4.1.3 배포 형태
+
+Windows Desktop 설치형
+지원 OS: Windows 10/11 x64
+
+4.1.4 제품 에디션 제안
+Standard
+Professional
+Enterprise
+Photogrammetry Add-on
+LiDAR Add-on
+AI Add-on
+4.2 제품 범위
+
+본 제품은 다음 범위를 포함한다.
+
+In Scope
+2D/3D GIS 데이터 시각화 및 편집
+정사사진, 수치지도, 벡터/래스터, DEM/DSM, point cloud, mesh 처리
+항공사진 AT 해석 및 photogrammetry 생산
+LiDAR 데이터 전처리, 분류, 필터링, surface/feature 생성
+AI 기반 객체 추출 및 분석
+데스크탑 기반 프로젝트 저작 및 결과 내보내기
+라이선스, 암호화, 복제방지, 감사로그
+Out of Scope (1차 릴리스 기준)
+완전한 웹 GIS 서버
+모바일 현장 앱
+실시간 다중 사용자 동시 편집 서버
+대규모 클라우드 분산 처리 엔진의 완전 내장
+CAD 전용 상세 설계 기능 전체 대체
+4.3 사용자 유형
+4.3.1 GIS Analyst
+데이터 조회
+공간분석
+주제도 제작
+결과 내보내기
+4.3.2 GIS Editor
+벡터/속성 편집
+지형/래스터 편집
+품질검사 및 수정
+4.3.3 Photogrammetry Specialist
+이미지 정합
+AT
+DSM/DTM
+orthomosaic
+mesh 생성
+4.3.4 LiDAR Specialist
+LAS/LAZ 정리
+분류/필터링
+surface/feature 추출
+point cloud 품질관리
+4.3.5 AI Operator
+학습 데이터셋 생성
+모델 실행
+후처리 및 검수
+4.3.6 Administrator
+설치/업데이트
+라이선스 관리
+보안 정책
+플러그인 배포
+5. 기능 요구사항 상세
+5.1 데이터 입출력 및 프로젝트 관리
+5.1.1 데이터 Import
+
+지원해야 할 핵심 포맷은 시장 표준을 기준으로 다음과 같이 정의한다.
+
+벡터
+SHP
+GeoJSON
+GPKG
+FileGDB 읽기
+DXF/DWG 기본 읽기
+KML/KMZ
+CSV/Excel 좌표 테이블
+
+GeoJSON은 RFC 7946, GeoPackage는 OGC 표준, Shapefile은 여전히 레거시 호환성 때문에 실무상 필수 포맷입니다. /영상
+
+GeoTIFF / BigTIFF
+COG
+JPEG2000
+ECW/MrSID(옵션 라이선스 고려)
+PNG/JPEG/TIFF
+DEM/DSM/DTM 계열 래스터
+
+COG는 대용량 래스터를 부분 접근 가능하게 만드는 현재 표준적 저장/전송 형식입니다. - LAS
+
+LAZ
+E57(권장)
+ASCII XYZ/PTS
+EPT/타일화 포인트클라우드 읽기(선택)
+
+LAS/LAZ는 여전히 상용 LiDAR 툴의 핵심 교환 포맷입니다. OBJ
+
+FBX
+glTF/GLB
+CityGML
+CityJSON
+3D Tiles 읽기
+IFC 읽기(선택, BIM 연계)
+
+CityGML/CityJSON은 3D 도시모델의 대표 표준입니다. F/JPEG 항공사진
+
+EXIF 포함 UAV 사진
+RPC 지원 위성영상(선택)
+카메라 외부/내부표정 파일
+POS/EO/IO 파일
+GCP/CP 텍스트 및 CSV
+5.1.2 데이터 Export
+SHP, GPKG, GeoJSON
+GeoTIFF/COG
+LAS/LAZ
+OBJ/FBX/glTF
+Orthomosaic, DSM, DTM
+3D Mesh
+PDF/이미지 지도 출력
+분석 리포트 Excel/PDF
+5.1.3 프로젝트 시스템
+프로젝트 파일(.gspx 가칭)
+상대경로/절대경로 옵션
+레이어 스타일, 좌표계, 북마크, 북마크 카메라 저장
+최근 프로젝트, 템플릿 프로젝트
+자동 저장 / 복구
+프로젝트 종속성 검사
+5.1.4 메타데이터
+데이터셋 제목, 설명, 출처, 제작일, 갱신일
+CRS, 해상도, 축척 범위
+데이터 품질 등급
+라이선스/배포 등급
+처리 이력 및 provenance
+5.2 좌표계/기준계 엔진
+
+좌표계 처리는 GIS 상용 제품에서 필수입니다. EPSG 카탈로그 기반 선택, 재투영, 축순서/단위 경고 체계가 필요합니다. EPSG 데이터셋과 PROJ 기반 변환 개념은 현재 업계 표준입니다. EPSG 검색 및 선택
+
+프로젝트 CRS / 레이어 CRS 분리
+On-the-fly reprojection
+좌표계 미정의 데이터 정의(Define Projection)
+데이터 재투영(Export Projection)
+수직 기준계 처리(가능하면)
+좌표 단위/축 순서 경고
+사용자 정의 CRS 등록
+5.2.2 고급 기능
+지역별 자주 쓰는 CRS 즐겨찾기
+오차/거리 측정 시 지리좌표계 경고
+대용량 래스터 재투영 배치 처리
+point cloud 좌표계 일괄 수정
+5.3 2D GIS 시각화 및 편집
+5.3.1 맵 뷰 기본 기능
+무한 팬/줌
+다중 맵 뷰
+오버뷰/독립 뷰
+좌표 표시
+스케일 바, 축척, 북쪽표시
+미니맵
+5.3.2 레이어 관리
+그룹 레이어
+가시성 on/off
+투명도
+범위 축척 설정
+순서 변경
+잠금/선택 잠금
+필터 저장
+즐겨찾기 레이어
+5.3.3 심볼 및 라벨
+단일심볼, 범주값, 수치구간, 규칙기반 심볼
+라벨 클래스
+충돌 회피
+Scale dependent labeling
+텍스트 halo, leader line
+스타일 라이브러리 저장
+5.3.4 벡터 편집
+점/선/면 생성, 이동, 회전, 복제, 삭제
+vertex 편집
+split/merge
+reshape
+스냅
+추적(trace)
+offset
+hole/add part
+속성 일괄 수정
+undo/redo
+edit session
+5.3.5 토폴로지 편집
+gap/overlap 검사
+self-intersection 검사
+dangling node 검사
+topology rule set
+오류 자동 수정 제안
+편집 전후 비교
+5.3.6 속성 테이블
+필드 계산기
+다중 정렬/필터
+도메인/서브타입
+조인/릴레이트
+요약 통계
+선택집합 관리
+5.4 3D GIS 시각화 및 편집
+
+상용 GIS는 이제 3D가 선택이 아니라 기본 기능입니다. GeoMedia 3D는 점군과 GIS 데이터를 함께 3D로 운용하고, ArcGIS Pro 역시 씬 기반 3D 분석을 확대하고 있습니다.
+
+Globe/Local Scene 모드
+Terrain draping
+Imagery draping
+3D 건물, mesh, point cloud 동시 표시
+카메라 북마크
+시점 저장/재생
+sun/shadow 기본 표시
+5.4.2 3D 객체 표현
+extrude by attribute
+multipatch/mesh 렌더링
+텍스처 on/off
+수직 exaggeration
+clipping box / section plane
+transparency / edge display
+5.4.3 3D 측정 및 분석
+3D 거리
+면적
+체적
+고도 프로파일
+line of sight
+skyline / viewshed(고급)
+shadow analysis(고급)
+5.4.4 3D 편집
+건물 extrusion 파라미터 수정
+단순 3D 객체 배치
+point cloud 기반 3D 피처 생성
+mesh clipping 및 ROI 추출
+단순 텍스처 교체
+5.5 항공사진 / Photogrammetry / AT 해석
+
+Trimble Inpho와 Bentley iTwin Capture가 보여주는 현재 상용 기준은 AT + dense matching + true ortho + mesh + QA/QC입니다. - 이미지 블록 생성
+
+카메라 모델 지정
+EO/IO/POS 파일 입력
+GCP/CP 입력
+사진 footprint 확인
+flight line 자동 그룹핑
+5.5.2 품질 확인
+중복률/전방/측방 중첩률 분석
+blur/노출 이상 탐지
+GCP 분포 경고
+EO 누락/오류 검출
+카메라 파라미터 불일치 검출
+5.5.3 Tie Point 추출
+자동 tie point generation
+tie point density 설정
+수동 tie point 추가/삭제
+tie point residual 보기
+약한 연결 구간 탐지
+5.5.4 Aerial Triangulation / Block Adjustment
+자유망 / 제어망 조정
+GCP/CP 가중치 설정
+self-calibration 옵션
+조정 결과 리포트
+RMSE, 잔차, 이상치 제거
+strip/block 품질 진단
+5.5.5 Dense Reconstruction
+dense point cloud 생성
+품질 등급(빠름/표준/고품질)
+GPU 가속 옵션
+noise filtering
+outlier removal
+ROI 단위 재처리
+5.5.6 Elevation Products
+DSM 생성
+DTM 생성
+surface smoothing
+void fill
+breakline 반영
+contour 생성
+5.5.7 Orthophoto / Orthomosaic
+정사보정
+true ortho
+seamline 생성
+color balancing
+tone normalization
+tile export
+ortho mosaic 검수
+
+ArcGIS Pro와 Trimble/Bentley 자료는 orthomosaic, DTM/DSM, true orthophoto가 현재 표준 산출물임을 보여 줍니다. - textured mesh 생성
+
+decimation
+hole filling
+mesh smoothing
+texture atlas 최적화
+export to OBJ/FBX/glTF
+대규모 mesh 타일링
+
+Bentley는 multiresolution reality mesh 및 스트리밍 최적화를 강조하고 있습니다. mmetry QA/QC
+
+GCP residual report
+check point report
+overlap heatmap
+block geometry report
+orthomosaic seamline inspect
+mesh 품질지표
+보고서 PDF 자동 생성
+5.6 LiDAR / Point Cloud 처리
+
+ArcGIS Pro, Terrasolid, Bentley, Global Mapper Pro의 흐름을 보면 LiDAR 처리의 핵심은 직접 읽기, 분류, 필터링, surface 생성, feature extraction, 성능 최적화입니다. oud Import/Index
+
+LAS/LAZ 직접 열기
+대용량 인덱싱
+spatial index 생성
+overview/pyramid 생성
+속성/분류코드 확인
+scan line 정보 읽기
+5.6.2 시각화
+RGB / intensity / elevation / classification 렌더링
+point size 조정
+density based rendering
+slicing
+profile view
+clip box
+return value 필터
+5.6.3 필터링/정제
+ground / vegetation / building / water 등 분류 필터
+noise 제거
+isolated point 제거
+thinning
+duplicate 제거
+범위/강도 기반 필터
+5.6.4 분류
+ground classification
+building classification
+vegetation classification
+powerline classification(고급)
+manual override
+class statistics
+5.6.5 Surface 생성
+LAS to DEM
+LAS to DSM
+TIN 생성
+contour 생성
+slope/aspect/curvature
+hillshade
+
+ArcGIS Pro의 LAS to Raster, DEM/DSM 전환, 피라미드 빌드 등은 이 기능이 상용 제품에서 기본선이라는 점을 잘 보여 줍니다. Extraction
+
+지면 추출
+건물 후보 추출
+수목 후보 추출
+도로면 추출
+전선/전주 후보 추출(고급)
+class-to-polygon / class-to-raster / class-to-multipatch
+5.6.7 Point Cloud Editing
+수동 재분류
+selection-based edit
+polygon fence edit
+breakline 기반 수정
+merge/split cloud
+misalignment 검사
+5.6.8 성능 최적화
+pyramid/LOD 생성
+GPU rendering
+메모리 캐시
+백그라운드 로딩
+ROI 우선 로딩
+압축 저장 옵션
+5.7 AI 기반 분석 기능
+
+Esri의 geospatial deep learning 자료처럼, 상용 GIS의 AI는 “직접 모델 학습”보다도 즉시 실행 가능한 추론 + 학습 데이터 제작 + 후처리가 중요합니다.
+
+AI 작업 관리자
+모델 등록/버전 관리
+GPU 상태 확인
+배치 추론
+결과 후처리
+신뢰도 임계값 조정
+5.7.2 영상 기반 AI
+건물 추출
+도로 추출
+토지피복 분류
+객체 탐지(차량, 시설물 등)
+변화탐지(before/after)
+5.7.3 LiDAR 기반 AI
+ground / vegetation / building 분류 보조
+tree segmentation
+전력선/전주 탐지
+point cloud semantic segmentation
+이상점 탐지
+5.7.4 Mesh / 3D AI
+facade/roof 자동 분리
+3D 객체 분류
+urban element tagging
+mesh defect detection
+5.7.5 AI-assisted Editing
+자동 추출 결과를 벡터 편집 가능한 객체로 변환
+사용자 수정 결과를 재학습용 샘플로 저장
+반자동 snapping / shape regularization
+polygon simplification with constraints
+5.7.6 Training Data Authoring
+이미지/점군 annotation
+클래스 정의
+patch 생성
+sample balancing
+train/val/test split
+augmentation 설정
+5.7.7 모델 연동
+ONNX 실행
+PyTorch/TensorRT 연동 옵션
+외부 Python inference bridge
+모델별 입력/출력 매핑 설정
+5.8 공간분석 및 지형분석
+5.8.1 기본 벡터 분석
+buffer
+intersect
+union
+erase
+dissolve
+clip
+spatial join
+nearest feature
+summarize within
+5.8.2 래스터 분석
+reclassify
+raster calculator
+zonal statistics
+resample
+mosaic
+raster clip
+thresholding
+5.8.3 지형 분석
+slope
+aspect
+hillshade
+contour
+watershed
+cut/fill
+viewshed
+line of sight
+5.8.4 3D 분석
+volume measurement
+obstruction analysis
+skyline
+shadow
+flood simulation pre-processing(고급)
+5.8.5 시계열 분석
+시점별 정사영상 비교
+point cloud epoch comparison
+변위량 분석
+공사 전후 변화량 계산
+5.9 편의 기능 및 생산성 기능
+
+이 부분은 많은 전문 GIS 제품에서 과소평가되지만 실제 제품 경쟁력에 매우 중요합니다.
+
+5.9.1 작업 편의
+Command search
+최근 사용 도구
+사용자 작업공간 저장
+멀티모니터 지원
+단축키 커스터마이징
+다크 모드
+5.9.2 배치 처리
+여러 데이터 일괄 import
+일괄 재투영
+일괄 타일링
+일괄 mesh export
+일괄 AI inference
+일괄 품질검사
+5.9.3 모델/템플릿
+심볼 템플릿
+출력 레이아웃 템플릿
+photogrammetry project template
+LiDAR classification template
+AI workflow template
+5.9.4 리포트
+자동 QA 리포트
+처리 로그 리포트
+GCP residual 리포트
+point cloud density 리포트
+데이터 인벤토리 리포트
+6. 반드시 추가해야 하는 기능
+
+질문하신 기존 요구사항 외에, 상용 제품으로 가려면 아래 기능은 반드시 넣는 것이 좋습니다.
+
+6.1 데이터 카탈로그 및 검색
+
+단순 파일 열기 방식만으로는 상용 제품 확장이 어렵습니다.
+
+필요 기능:
+
+데이터셋 인덱스
+태그/키워드 검색
+썸네일 미리보기
+공간 범위로 검색
+제작일/좌표계/해상도 필터
+중복 데이터 탐지
+6.2 품질검사(QA/QC) 프레임워크
+
+실제 제작 현장에서는 “분석 기능”만큼 “검수 기능”이 중요합니다.
+
+필요 기능:
+
+CRS 불일치 탐지
+geometry invalid 검사
+속성 누락 검사
+orthomosaic seamline 오류 탐지
+point cloud density gap 검사
+GCP/CP 오차 기준 자동 판정
+mesh hole/self-intersection 검사
+6.3 Workflow / Job Manager
+
+AT, mesh, AI inference, 타일 생성은 장시간 작업입니다.
+
+필요 기능:
+
+작업 큐
+중단/재개
+실패 복구
+백그라운드 처리
+로그 확인
+결과물 자동 위치 관리
+6.4 플러그인 SDK
+
+확장성을 고려한다면 초기부터 구조를 열어야 합니다.
+
+필요 기능:
+
+C++/C#/Python SDK
+메뉴/툴바 확장 API
+custom layer provider API
+custom analysis tool API
+custom import/export driver API
+6.5 엔터프라이즈 연계
+
+향후 확장을 위해 다음을 고려해야 합니다.
+
+PostGIS / Oracle Spatial / SQL Server Spatial 연결
+WMS/WFS/WMTS/3D Tiles 읽기
+S3/오브젝트 스토리지 연결
+로컬/네트워크/클라우드 캐시 정책
+6.6 고성능 그래픽 엔진
+
+도시 규모 3D와 대용량 점군을 위해 필수입니다.
+
+필요 기능:
+
+GPU memory budget
+scene LOD
+tile-based streaming
+async loading
+frustum culling
+occlusion culling
+multi-thread decompression
+6.7 감사로그 / 추적성
+
+공공·기업용 상용 제품에서 매우 중요합니다.
+
+필요 기능:
+
+누가 어떤 데이터를 열고 수정했는지 기록
+export 이력 기록
+AI 결과 승인/반려 기록
+프로젝트 변경 diff 기록
+license event 기록
+7. 비기능 요구사항
+7.1 성능
+1억 포인트급 점군의 인터랙티브 탐색 가능
+도시 단위 mesh의 타일 기반 렌더링
+수천 장 항공사진 프로젝트 관리 가능
+대용량 orthomosaic의 pyramid/overview 기반 탐색
+장시간 처리 중 UI 프리징 최소화
+7.2 안정성
+비정상 종료 시 자동 복구
+장시간 처리 로그 저장
+결과 checksum 검증
+프로젝트 파일 무결성 검사
+7.3 사용성
+전문 사용자 대상 리본/패널 기반 UI
+초급/전문 모드 분리
+마법사 기반 photogrammetry/LiDAR workflow
+context-sensitive help
+단계별 오류 메시지
+7.4 유지보수성
+모듈 분리 아키텍처
+렌더링 엔진 / 데이터 엔진 / 분석 엔진 / AI 엔진 분리
+테스트 자동화
+플러그인 충돌 분리
+7.5 확장성
+Add-on 방식 라이선스
+신규 센서 포맷 드라이버 추가 용이
+AI 모델 추가 용이
+클라우드 처리 모듈 연계 가능
+8. 보안 및 복제 방지 기능
+
+데스크탑 상용 소프트웨어이므로 질문하신 “복제 방지”는 필수입니다.
+다만 제품 경쟁력을 해치지 않도록 보안과 사용성의 균형이 필요합니다.
+
+8.1 라이선스 모델
+Node-locked license
+Floating license
+Subscription license
+Offline lease license
+USB dongle 옵션(고객군에 따라 선택)
+8.2 복제 방지
+기기 fingerprint 기반 활성화
+암호화된 license token
+온라인 활성화 / 비활성화
+activation 횟수 제한
+license heartbeat
+불법 복제 탐지 시 기능 제한 모드
+8.3 실행 파일 보호
+코드 서명
+바이너리 난독화
+안티디버깅 / 안티탬퍼링
+핵심 알고리즘 DLL 암호화 로드
+무결성 검증
+8.4 데이터 보호
+프로젝트 파일 암호화 옵션
+결과물 워터마크 옵션
+민감 프로젝트 export 제한
+사용자별 권한 프로파일
+8.5 감사 및 컴플라이언스
+라이선스 사용 로그
+기기 변경 기록
+관리자 감사 리포트
+오프라인 기간 초과 정책
+
+OAuth/OIDC/JWT, 감사 로깅 가이드는 서버형 제품 기준이지만, 데스크탑에서도 계정 기반 활성화·감사 체계 설계에 유효한 참조입니다. 텍처
+
+9.1 모듈 구성
+Core App Shell
+Data Access Engine
+CRS Engine
+2D Render Engine
+3D Render Engine
+Raster Engine
+Vector Edit Engine
+Point Cloud Engine
+Photogrammetry Engine
+AI Inference Engine
+QA/QC Engine
+License/Security Engine
+Plugin Host
+9.2 권장 기술 방향
+UI: C++/Qt 또는 .NET/WPF + 고성능 네이티브 엔진 혼합
+2D/3D 렌더링: DirectX 12 또는 Vulkan 기반 고려
+좌표계: PROJ 연동
+래스터: GDAL 기반
+점군: PDAL 기반 파이프라인 또는 자체 인덱서
+공간DB 연계: GDAL/OGR + native DB connectors
+
+PROJ, GDAL, PDAL은 좌표변환·래스터·점군 파이프라인의 사실상 표준 오픈 기술축입니다. 위 제안
+
+Phase 1: MVP
+벡터/래스터/점군 import
+2D/3D viewer
+기본 편집
+기본 분석
+LAS 필터/DEM 생성
+정사영상 표시
+기본 라이선스 관리
+프로젝트 저장/출력
+Phase 2: Professional GIS
+고급 편집/토폴로지
+고급 공간분석
+3D 분석
+point cloud 분류
+AI inference
+데이터 카탈로그
+배치처리
+Phase 3: Production Photogrammetry + LiDAR
+AT 해석
+dense cloud
+DSM/DTM
+true ortho
+textured mesh
+advanced LiDAR classification
+QA/QC report automation
+distributed processing option
+Phase 4: Enterprise/Platform
+DB 연계
+플러그인 SDK
+조직 정책/감사
+협업형 패키징
+중앙 라이선스 서버
+서버/웹 연동 모듈
+11. 최종 기능 목록 요약
+
+아래 기능들은 신규 상용 GIS 소프트웨어의 필수 핵심 기능으로 보는 것이 적절합니다.
+
+A. 기본 GIS
+데이터 import/export
+CRS 관리
+2D/3D 시각화
+벡터/래스터 편집
+레이어/스타일/라벨
+속성 테이블/질의
+인쇄/출력
+B. 고급 GIS
+토폴로지
+공간분석
+지형분석
+시계열 비교
+3D 분석
+QA/QC
+C. Photogrammetry
+사진 블록 관리
+tie point 추출
+AT 해석
+GCP/CP 관리
+dense point cloud
+DSM/DTM
+orthomosaic / true ortho
+textured mesh
+D. LiDAR
+LAS/LAZ 처리
+필터링/분류
+노이즈 제거
+DEM/DSM/TIN/Contour
+feature extraction
+point cloud editing
+고성능 렌더링
+E. AI
+객체탐지
+분류
+세그멘테이션
+변화탐지
+point cloud AI
+AI-assisted editing
+training data authoring
+F. 상용 제품화
+라이선스/복제방지
+암호화/무결성 검증
+감사로그
+배치처리
+작업 큐
+플러그인 SDK
+엔터프라이즈 연계
+확장형 아키텍처

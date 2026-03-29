@@ -1,0 +1,48 @@
+{
+  "name": "geostudio-x",
+  "version": "0.1.0",
+  "description": "GeoStudio X — Professional 3D GIS Desktop Software",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "electron:dev": "vite",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "gis",
+    "3d",
+    "cesium",
+    "electron"
+  ],
+  "author": "",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "cesium": "^1.139.1",
+    "dxf-parser": "^1.1.2",
+    "flexlayout-react": "^0.8.19",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-window": "^2.2.7",
+    "sharp": "^0.34.5",
+    "three": "^0.183.2",
+    "zustand": "^5.0.12"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@types/react-window": "^1.8.8",
+    "@types/three": "^0.183.1",
+    "@vitejs/plugin-react": "^6.0.1",
+    "@vitest/coverage-v8": "^4.1.2",
+    "electron": "^41.0.4",
+    "electron-builder": "^26.8.1",
+    "typescript": "^6.0.2",
+    "vite": "^8.0.2",
+    "vite-plugin-electron": "^0.29.1",
+    "vite-plugin-static-copy": "^4.0.0",
+    "vitest": "^4.1.2"
+  }
+}

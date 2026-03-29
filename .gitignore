@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-electron/
+
+# Cesium static assets (2GB+, downloaded by build)
+public/cesium/
+
+# Sample data (large test files)
+sample_data/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Env
+.env
+.env.local
+
+# Logs
+*.log
+npm-debug.log*

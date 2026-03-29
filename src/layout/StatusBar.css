@@ -1,0 +1,126 @@
+/* ═══ Status Bar ═══ */
+.statusbar {
+  height: var(--statusbar-height);
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-primary);
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.statusbar-left {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.statusbar-center {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-primary);
+}
+
+.statusbar-right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.statusbar-badge {
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.statusbar-badge.epsg {
+  background: var(--accent-primary);
+  color: #fff;
+}
+
+.statusbar-badge.fps {
+  background: var(--status-success);
+  color: #000;
+}
+
+.statusbar-coord {
+  display: flex;
+  gap: 6px;
+}
+
+.statusbar-coord span {
+  opacity: 0.6;
+}
+
+/* ═══ Batch Loading Progress ═══ */
+.batch-progress-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.batch-progress-bar {
+  width: 120px;
+  height: 12px;
+  background: var(--bg-tertiary);
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid var(--border-subtle);
+}
+
+.batch-progress-fill {
+  height: 100%;
+  background: var(--accent-gradient);
+  border-radius: 6px;
+  transition: width 300ms ease;
+  box-shadow: 0 0 8px rgba(74, 158, 255, 0.3);
+}
+
+.batch-progress-text {
+  font-size: var(--font-size-xs);
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.batch-progress-text .batch-failed {
+  color: var(--status-error);
+}
+
+.batch-progress-text .batch-current {
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.batch-cancel-btn {
+  background: transparent;
+  border: 1px solid var(--border-primary);
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  font-size: 10px;
+  padding: 1px 6px;
+  line-height: 1;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.batch-cancel-btn:hover {
+  background: var(--status-error);
+  color: #fff;
+  border-color: var(--status-error);
+}

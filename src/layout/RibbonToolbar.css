@@ -1,0 +1,114 @@
+/* ═══ Ribbon Toolbar ═══ */
+.ribbon {
+  height: var(--ribbon-height);
+  background: var(--bg-ribbon);
+  border-bottom: 1px solid var(--border-primary);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.ribbon-tabs {
+  display: flex;
+  height: 30px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 0 8px;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.ribbon-tab {
+  padding: 4px 16px;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  transition: all var(--transition-fast);
+  background: transparent;
+  letter-spacing: 0.3px;
+}
+
+.ribbon-tab:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.ribbon-tab.active {
+  color: var(--text-primary);
+  background: var(--bg-ribbon);
+  border-color: var(--border-primary);
+}
+
+.ribbon-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 4px;
+}
+
+.ribbon-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-right: 1px solid var(--border-subtle);
+  height: 100%;
+}
+
+.ribbon-group:last-child {
+  border-right: none;
+}
+
+.ribbon-group-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-align: center;
+  position: absolute;
+  bottom: 2px;
+  width: 100%;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.ribbon-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-size: var(--font-size-xs);
+  min-width: 52px;
+  position: relative;
+}
+
+.ribbon-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-subtle);
+}
+
+.ribbon-btn:active {
+  background: var(--bg-active);
+}
+
+.ribbon-btn .icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.ribbon-btn .label {
+  font-size: 10px;
+  white-space: nowrap;
+}

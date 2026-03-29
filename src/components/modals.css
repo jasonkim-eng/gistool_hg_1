@@ -1,0 +1,403 @@
+/* ═══ Scan Progress Modal ═══ */
+.scan-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: scanModalFadeIn 300ms ease;
+}
+
+@keyframes scanModalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.scan-modal {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(74, 158, 255, 0.1);
+  padding: 40px 48px;
+  min-width: 420px;
+  max-width: 520px;
+  text-align: center;
+  animation: scanModalSlideUp 400ms ease;
+}
+
+@keyframes scanModalSlideUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.scan-modal-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  animation: scanPulse 1.5s ease infinite;
+}
+
+@keyframes scanPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+.scan-modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  letter-spacing: 0.3px;
+}
+
+.scan-modal-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+}
+
+.scan-modal-progress-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--bg-primary);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  border: 1px solid var(--border-subtle);
+}
+
+.scan-modal-progress-fill {
+  height: 100%;
+  background: var(--accent-gradient);
+  border-radius: 4px;
+  transition: width 200ms ease;
+  box-shadow: 0 0 12px rgba(74, 158, 255, 0.4);
+}
+
+.scan-modal-stats {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  margin-bottom: 16px;
+}
+
+.scan-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.scan-stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--accent-primary);
+  font-family: var(--font-mono);
+}
+
+.scan-stat-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.scan-modal-hint {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+.scan-modal-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--border-primary);
+  border-top-color: var(--accent-primary);
+  border-radius: 50%;
+  margin: 0 auto;
+  animation: scanSpin 0.8s linear infinite;
+}
+
+@keyframes scanSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* ═══ GeoTIFF Progress Modal ═══ */
+.geotiff-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: geotiffFadeIn 250ms ease;
+}
+
+@keyframes geotiffFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.geotiff-modal {
+  background: linear-gradient(160deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 24px 72px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(74, 158, 255, 0.08), inset 0 1px 0 rgba(255,255,255,0.05);
+  padding: 28px 32px;
+  width: 460px;
+  max-width: 94vw;
+  animation: geotiffSlideUp 350ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes geotiffSlideUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── Header ── */
+.geotiff-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.geotiff-modal-icon {
+  font-size: 36px;
+  flex-shrink: 0;
+  animation: geotiffPulse 2.4s ease infinite;
+}
+
+@keyframes geotiffPulse {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.1) rotate(-3deg); }
+}
+
+.geotiff-modal-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.2px;
+  margin-bottom: 3px;
+}
+
+.geotiff-modal-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 320px;
+}
+
+.geotiff-modal-size {
+  color: var(--text-muted);
+}
+
+/* ── Progress Sections ── */
+.geotiff-progress-section {
+  margin-bottom: 14px;
+}
+
+.geotiff-convert-section {
+  background: rgba(74, 158, 255, 0.05);
+  border: 1px solid rgba(74, 158, 255, 0.15);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  margin-bottom: 14px;
+}
+
+.geotiff-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.geotiff-progress-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.geotiff-convert-label {
+  color: var(--accent-primary);
+}
+
+.geotiff-progress-pct {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent-primary);
+  font-family: var(--font-mono);
+}
+
+.geotiff-modal-progress-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--bg-primary);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+}
+
+.geotiff-sub-bar {
+  height: 6px;
+}
+
+.geotiff-modal-progress-fill {
+  height: 100%;
+  background: var(--accent-gradient);
+  border-radius: 4px;
+  transition: width 300ms ease;
+  box-shadow: 0 0 12px rgba(74, 158, 255, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.geotiff-modal-progress-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.28) 50%,
+    transparent 100%
+  );
+  animation: geotiffShimmer 1.8s ease infinite;
+}
+
+.geotiff-convert-fill {
+  background: linear-gradient(90deg, #4a9eff, #7ecfff);
+  box-shadow: 0 0 10px rgba(126, 207, 255, 0.5);
+}
+
+@keyframes geotiffShimmer {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+
+/* ── Bytes Info ── */
+.geotiff-bytes-info {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.geotiff-bytes-sep {
+  color: var(--border-primary);
+}
+
+.geotiff-bytes-phase {
+  margin-left: auto;
+  color: var(--accent-primary);
+  font-weight: 600;
+  font-family: var(--font-family);
+  font-size: 10px;
+  background: rgba(74, 158, 255, 0.1);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+/* ── Steps List ── */
+.geotiff-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 14px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.geotiff-step-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  transition: background 200ms ease;
+}
+
+.geotiff-step-pending {
+  color: var(--text-muted);
+  opacity: 0.55;
+}
+
+.geotiff-step-active {
+  color: var(--text-primary);
+  background: rgba(74, 158, 255, 0.1);
+  border-left: 2px solid var(--accent-primary);
+  font-weight: 600;
+}
+
+.geotiff-step-done {
+  color: var(--status-success);
+}
+
+.geotiff-step-icon {
+  width: 18px;
+  text-align: center;
+  flex-shrink: 0;
+  font-size: 13px;
+}
+
+.geotiff-step-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.geotiff-step-sub {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent-primary);
+  font-family: var(--font-mono);
+  background: rgba(74, 158, 255, 0.12);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.geotiff-step-spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(74, 158, 255, 0.3);
+  border-top-color: var(--accent-primary);
+  border-radius: 50%;
+  animation: geotiffSpinStep 0.7s linear infinite;
+}
+
+@keyframes geotiffSpinStep {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Step / Footer ── */
+.geotiff-modal-step {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+  min-height: 16px;
+  margin-bottom: 12px;
+}
+
+.geotiff-modal-spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid var(--border-primary);
+  border-top-color: var(--accent-primary);
+  border-radius: 50%;
+  margin: 0 auto;
+  animation: geotiffSpinStep 0.8s linear infinite;
+}
