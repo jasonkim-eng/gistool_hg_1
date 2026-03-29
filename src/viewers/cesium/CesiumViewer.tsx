@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import {
   Viewer,
   Cartesian3,
@@ -250,7 +250,41 @@ const CesiumViewer: React.FC = () => {
     };
   }, []);
 
-  return <div ref={containerRef} className="cesium-container" />;
+  const handleZoomIn = useCallback(() => {
+    const v = viewerRef.current;
+    if (!v) return;
+    v.camera.zoomIn(v.camera.positionCartographic.height * 0.3);
+    v.scene.requestRender();
+  }, []);
+
+  const handleZoomOut = useCallback(() => {
+    const v = viewerRef.current;
+    if (!v) return;
+    v.camera.zoomOut(v.camera.positionCartographic.height * 0.5);
+    v.scene.requestRender();
+  }, []);
+
+  const handleNorth = useCallback(() => {
+    const v = viewerRef.current;
+    if (!v) return;
+    const camera = v.camera;
+    const pos = camera.positionCartographic;
+    camera.flyTo({
+      destination: Cartesian3.fromRadians(pos.longitude, pos.latitude, pos.height),
+      orientation: { heading: 0, pitch: camera.pitch, roll: 0 },
+      duration: 0.5,
+    });
+  }, []);
+
+  return (
+    <div ref={containerRef} className="cesium-container">
+      <div className="viewer-nav-controls">
+        <button className="nav-btn" onClick={handleZoomIn} title="확대">+</button>
+        <button className="nav-btn" onClick={handleZoomOut} title="축소">-</button>
+        <button className="nav-btn nav-north" onClick={handleNorth} title="북쪽">N</button>
+      </div>
+    </div>
+  );
 };
 
 export default CesiumViewer;
