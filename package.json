@@ -1,7 +1,7 @@
 {
-  "name": "geostudio-x",
+  "name": "mt-gis-hg",
   "version": "0.1.0",
-  "description": "GeoStudio X — Professional 3D GIS Desktop Software",
+  "description": "MT_GIS_HG — Professional 3D GIS Desktop Software",
   "main": "dist-electron/main.js",
   "scripts": {
     "dev": "vite",

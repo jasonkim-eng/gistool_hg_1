@@ -1,4 +1,4 @@
-# GeoStudio X
+# MT_GIS_HG
 
 Professional 3D GIS Desktop Software built with Electron + React + TypeScript + CesiumJS.
 

@@ -140,7 +140,7 @@ function createWindow() {
     height: 1000,
     minWidth: 1024,
     minHeight: 700,
-    title: 'GeoStudio X',
+    title: 'MT_GIS_HG',
     backgroundColor: '#0d1117',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -176,7 +176,7 @@ async function logGpuInfo() {
     const totalRAM = (os.totalmem() / (1024 ** 3)).toFixed(1);
 
     console.log('═══════════════════════════════════════');
-    console.log('  GeoStudio X — System Info');
+    console.log('  MT_GIS_HG — System Info');
     console.log('═══════════════════════════════════════');
     console.log(`  CPU: ${os.cpus()[0]?.model || 'Unknown'}`);
     console.log(`  CPU Cores: ${cpuCores} (logical)`);
