@@ -37,6 +37,8 @@ interface VectorLayer {
   /** Bounding box in degrees (accumulated during loading) */
   west: number; south: number; east: number; north: number;
   tileSize: number;
+  /** User-toggled visibility (false = all tiles hidden regardless of viewport) */
+  userVisible: boolean;
 }
 
 const registry = new Map<string, VectorLayer>();
@@ -81,6 +83,7 @@ export function createVectorLayer(layerId: string): void {
     tiles: new Map(),
     west: Infinity, south: Infinity, east: -Infinity, north: -Infinity,
     tileSize: DEFAULT_TILE_SIZE_DEG,
+    userVisible: true,
   };
   registry.set(layerId, layer);
 
@@ -156,6 +159,7 @@ export function addPoint(
 export function setVectorVisibility(layerId: string, visible: boolean): void {
   const layer = registry.get(layerId);
   if (!layer) return;
+  layer.userVisible = visible;
   for (const tile of layer.tiles.values()) {
     tile.polylines.show = visible;
     tile.points.show = visible;
@@ -265,6 +269,9 @@ function updateTileVisibility(viewer: Viewer): void {
   let changed = false;
 
   for (const layer of registry.values()) {
+    // Skip layers the user has hidden — don't re-show their tiles
+    if (!layer.userVisible) continue;
+
     for (const tile of layer.tiles.values()) {
       // Parse tile key to get center coordinates
       const [txStr, tyStr] = tile.key.split('_');
