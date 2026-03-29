@@ -10,6 +10,7 @@
 @import './components/modals.css';
 @import './components/contextMenu.css';
 @import './panels/SymbologyPopover.css';
+@import './panels/PerformanceSettingsPanel.css';
 
 /* ── CSS Variables ── */
 :root {

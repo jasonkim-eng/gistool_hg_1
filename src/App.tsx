@@ -7,6 +7,8 @@ import ModelSelectionIndicator from './components/ModelSelectionIndicator';
 import ScanProgressModal from './components/ScanProgressModal';
 import GeoTiffProgressModal from './components/GeoTiffProgressModal';
 import SymbologyPopover from './panels/SymbologyPopover';
+import PerformanceSettingsPanel from './panels/PerformanceSettingsPanel';
+import { usePerformanceStore } from './stores/usePerformanceStore';
 import { flyTo } from './viewers/cesium/CesiumAdapter';
 import { getLoaderForExtension, getDialogFilters } from './loaders/FileFormatRegistry';
 import { registerAllLoaders } from './loaders/registerLoaders';
@@ -64,6 +66,10 @@ const App: React.FC = () => {
     await openDxfFolderAndLoad();
   }, []);
 
+  const handleOpenPerfSettings = useCallback(() => {
+    usePerformanceStore.getState().open();
+  }, []);
+
   const handleResetCamera = useCallback(() => {
     flyTo(DEFAULT_GEO.CAMERA_LON, DEFAULT_GEO.CAMERA_LAT, DEFAULT_GEO.CAMERA_ALT);
   }, []);
@@ -95,6 +101,7 @@ const App: React.FC = () => {
         onOpenDxfFolder={handleOpenDxfFolder}
         onOpenGeoTiff={handleOpenGeoTiff}
         onResetCamera={handleResetCamera}
+        onOpenPerfSettings={handleOpenPerfSettings}
       />
       <div className="app-body">
         <DockLayout />
@@ -102,6 +109,7 @@ const App: React.FC = () => {
       <StatusBar />
       <ScanProgressModal />
       <GeoTiffProgressModal />
+      <PerformanceSettingsPanel />
       <ModelContextMenu />
       <SymbologyPopover />
       <ModelSelectionIndicator />

@@ -6,11 +6,12 @@ interface RibbonToolbarProps {
   onOpenDxfFolder: () => void;
   onOpenGeoTiff: () => void;
   onResetCamera: () => void;
+  onOpenPerfSettings: () => void;
 }
 
 const tabs = ['홈', '3D 뷰어'];
 
-const RibbonToolbar: React.FC<RibbonToolbarProps> = ({ onOpenFile, onOpenFolder, onOpenDxfFolder, onOpenGeoTiff, onResetCamera }) => {
+const RibbonToolbar: React.FC<RibbonToolbarProps> = ({ onOpenFile, onOpenFolder, onOpenDxfFolder, onOpenGeoTiff, onResetCamera, onOpenPerfSettings }) => {
   const [activeTab, setActiveTab] = useState('홈');
 
   return (
@@ -54,6 +55,10 @@ const RibbonToolbar: React.FC<RibbonToolbarProps> = ({ onOpenFile, onOpenFolder,
               <button className="ribbon-btn" onClick={onResetCamera} title="카메라 초기 위치로 이동">
                 <span className="icon">🌏</span>
                 <span className="label">지구 보기</span>
+              </button>
+              <button className="ribbon-btn" onClick={onOpenPerfSettings} title="성능 설정 (동적 로딩, 타일링)">
+                <span className="icon">⚙️</span>
+                <span className="label">성능 설정</span>
               </button>
             </div>
           </>

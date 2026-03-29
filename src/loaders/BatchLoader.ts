@@ -22,9 +22,7 @@ import { useViewerStore } from '../stores/useViewerStore';
 import { useBatchStore } from '../stores/useBatchStore';
 import { useSpatialCatalogStore, type CatalogEntry } from '../stores/useSpatialCatalogStore';
 import { BATCH } from '../config/defaults';
-
-/** Threshold: batches larger than this use view-dependent loading */
-const VIEW_DEPENDENT_THRESHOLD = 500;
+import { usePerformanceStore } from '../stores/usePerformanceStore';
 
 // ── State ──
 let currentAbortController: AbortController | null = null;
@@ -172,7 +170,8 @@ async function smartLoad(
   }
 
   // ── Phase 2: Load models ──
-  if (objFiles.length > VIEW_DEPENDENT_THRESHOLD && withCoords.length > 0) {
+  const perfSettings = usePerformanceStore.getState();
+  if (perfSettings.viewDependentLoading && objFiles.length > perfSettings.viewDependentThreshold && withCoords.length > 0) {
     // Large batch with geo-coordinates: use view-dependent loading
     // Only loads models visible in the current camera viewport
     useViewerStore.getState().setStatusMessage(

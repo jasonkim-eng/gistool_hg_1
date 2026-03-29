@@ -8,6 +8,7 @@ import { getCesiumViewer } from './CesiumViewer';
 import type { LayerSymbology } from '../../types/symbology';
 import { useLayerStore } from '../../stores/useLayerStore';
 import { useSpatialCatalogStore } from '../../stores/useSpatialCatalogStore';
+import { usePerformanceStore } from '../../stores/usePerformanceStore';
 
 /** Active highlight timer — tracks current flash animation */
 let highlightTimer: ReturnType<typeof setTimeout> | null = null;
@@ -220,17 +221,15 @@ export function highlightModel(layerId: string): void {
 
 // ═══ Distance-Based Culling with GPU Memory Unloading ═══
 
-const MAX_VISIBLE_MODELS = 300;
-const MAX_GPU_MODELS = 600;
 const CULL_DEBOUNCE_MS = 800;
 let cullTimer: ReturnType<typeof setTimeout> | null = null;
 let cullListenerActive = false;
 
 /**
  * Start distance-based model culling with actual GPU memory unloading.
- * - Nearest MAX_VISIBLE_MODELS: visible
- * - Up to MAX_GPU_MODELS: hidden (warm GPU cache)
- * - Beyond MAX_GPU_MODELS: destroyed (freed from GPU, can be re-loaded from GLB cache)
+ * - Nearest maxVisibleModels: visible
+ * - Up to maxGpuModels: hidden (warm GPU cache)
+ * - Beyond maxGpuModels: destroyed (freed from GPU, can be re-loaded from GLB cache)
  */
 export function startDistanceCulling(): void {
   const viewer = getCesiumViewer();
@@ -248,7 +247,8 @@ export function startDistanceCulling(): void {
 
 function performCull(): void {
   const viewer = getCesiumViewer();
-  if (!viewer || registry.size <= MAX_VISIBLE_MODELS) return;
+  const { maxVisibleModels, maxGpuModels } = usePerformanceStore.getState();
+  if (!viewer || registry.size <= maxVisibleModels) return;
 
   const cameraPos = viewer.camera.positionWC;
   const layers = useLayerStore.getState().layers;
@@ -279,10 +279,10 @@ function performCull(): void {
     const model = registry.get(layerId);
     if (!model) continue;
 
-    if (i < MAX_VISIBLE_MODELS) {
+    if (i < maxVisibleModels) {
       // Inner ring: visible
       if (!model.show) { model.show = true; changed = true; }
-    } else if (i < MAX_GPU_MODELS) {
+    } else if (i < maxGpuModels) {
       // Middle ring: hidden but kept in GPU
       if (model.show) { model.show = false; changed = true; }
     } else {
