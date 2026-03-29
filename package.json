@@ -9,7 +9,9 @@
     "preview": "vite preview",
     "electron:dev": "vite",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "package": "npm run build && electron-builder --win",
+    "package:dir": "npm run build && electron-builder --win --dir"
   },
   "keywords": [
     "gis",
@@ -44,5 +46,41 @@
     "vite-plugin-electron": "^0.29.1",
     "vite-plugin-static-copy": "^4.0.0",
     "vitest": "^4.1.2"
+  },
+  "build": {
+    "appId": "io.mobiltech.mt-gis-hg",
+    "productName": "MT_GIS_HG",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "dist/cesium",
+        "to": "cesium"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": null
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "MT_GIS_HG"
+    },
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/sharp/**/*"
+    ]
   }
 }

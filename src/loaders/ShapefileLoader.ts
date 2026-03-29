@@ -8,7 +8,15 @@
 
 import { Cartesian3, Color } from 'cesium';
 import { getCesiumViewer } from '../viewers/cesium/CesiumViewer';
-import { flyTo, removeEntitiesByPrefix, requestRender } from '../viewers/cesium/CesiumAdapter';
+import { flyTo, requestRender } from '../viewers/cesium/CesiumAdapter';
+import {
+  createVectorLayer,
+  addPolyline,
+  addPoint,
+  setVectorVisibility,
+  setVectorSymbology,
+  removeVectorLayer,
+} from '../viewers/cesium/VectorPrimitiveRegistry';
 import { useLayerStore } from '../stores/useLayerStore';
 import { useViewerStore } from '../stores/useViewerStore';
 import {
@@ -270,8 +278,9 @@ export async function loadShapefile(filePath: string): Promise<LoadResult> {
 
     console.log(`[ShapefileLoader] CRS: EPSG:${epsg} (${crsName})`);
 
-    // ── Step 5: Transform and render ──
+    // ── Step 5: Transform and render via batched primitive collections ──
     status(`${fileName}: ${records.length.toLocaleString()}개 도형 렌더링 중...`);
+    createVectorLayer(layerId);
 
     const crs = epsg && KOREAN_CRS[epsg] ? KOREAN_CRS[epsg] : null;
     const isWgs84 = epsg === 4326;
@@ -297,23 +306,16 @@ export async function loadShapefile(filePath: string): Promise<LoadResult> {
 
       for (let i = batchStart; i < batchEnd; i++) {
         const rec = records[i];
-        const entityId = `${layerId}_e${i}`;
         const dbfRec = dbfRecords[i];
         const color = dbfRec?.BCHK ? getCadastralColor(dbfRec.BCHK) : Color.CYAN;
 
         try {
           if (rec.shapeType === 1 && rec.x != null && rec.y != null) {
-            // Point
             const wgs = toWgs84(rec.x, rec.y);
             updateBounds(wgs.lon, wgs.lat);
-            viewer.entities.add({
-              id: entityId,
-              position: Cartesian3.fromDegrees(wgs.lon, wgs.lat),
-              point: { pixelSize: 4, color, outlineColor: Color.BLACK, outlineWidth: 1 },
-            });
+            addPoint(layerId, Cartesian3.fromDegrees(wgs.lon, wgs.lat), color, 4);
             rendered++;
           } else if ((rec.shapeType === 3 || rec.shapeType === 5) && rec.parts && rec.points) {
-            // Polyline or Polygon — render each part as a polyline
             for (let p = 0; p < rec.parts.length; p++) {
               const start = rec.parts[p];
               const end = p + 1 < rec.parts.length ? rec.parts[p + 1] : rec.points.length;
@@ -325,22 +327,13 @@ export async function loadShapefile(filePath: string): Promise<LoadResult> {
                 updateBounds(wgs.lon, wgs.lat);
               }
 
-              // Close polygon rings
               if (rec.shapeType === 5 && degreesArr.length >= 4) {
                 const firstWgs = toWgs84(rec.points[start].x, rec.points[start].y);
                 degreesArr.push(firstWgs.lon, firstWgs.lat);
               }
 
               if (degreesArr.length >= 4) {
-                viewer.entities.add({
-                  id: `${entityId}_p${p}`,
-                  polyline: {
-                    positions: Cartesian3.fromDegreesArray(degreesArr),
-                    width: 1.5,
-                    material: color,
-                    clampToGround: false,
-                  },
-                });
+                addPolyline(layerId, Cartesian3.fromDegreesArray(degreesArr), color, 1.5);
               }
             }
             rendered++;
@@ -389,50 +382,15 @@ export async function loadShapefile(filePath: string): Promise<LoadResult> {
 // ─── Visibility / Removal ───────────────────────────────────────────────────
 
 export function setShpVisibility(layerId: string, visible: boolean): void {
-  const viewer = getCesiumViewer();
-  if (!viewer) return;
-  const prefix = `${layerId}_`;
-  for (let i = viewer.entities.values.length - 1; i >= 0; i--) {
-    const entity = viewer.entities.values[i];
-    if (entity.id && entity.id.startsWith(prefix)) {
-      entity.show = visible;
-    }
-  }
-  requestRender();
+  setVectorVisibility(layerId, visible);
 }
 
-/**
- * Apply symbology to all entities belonging to a SHP layer.
- */
 export function setShpSymbology(layerId: string, symbology: LayerSymbology): void {
-  const viewer = getCesiumViewer();
-  if (!viewer) return;
-  const prefix = `${layerId}_`;
-  const isOverride = symbology.color.toUpperCase() !== '#FFFFFF';
-  const overrideColor = isOverride
-    ? Color.fromCssColorString(symbology.color).withAlpha(symbology.opacity)
-    : null;
-
-  for (const entity of viewer.entities.values) {
-    if (!entity.id || !entity.id.startsWith(prefix)) continue;
-    if (entity.polyline) {
-      if (overrideColor) {
-        (entity.polyline.material as any) = overrideColor;
-      }
-      (entity.polyline.width as any) = symbology.lineWidth;
-    }
-    if (entity.point) {
-      if (overrideColor) {
-        (entity.point.color as any) = overrideColor;
-      }
-      (entity.point.pixelSize as any) = symbology.pointSize;
-    }
-  }
-  requestRender();
+  setVectorSymbology(layerId, symbology);
 }
 
 export function removeShpEntities(layerId: string): void {
-  removeEntitiesByPrefix(`${layerId}_`);
+  removeVectorLayer(layerId);
 }
 
 // ─── IFileLoader ────────────────────────────────────────────────────────────

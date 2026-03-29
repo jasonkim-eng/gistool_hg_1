@@ -1,7 +1,15 @@
 import DxfParser from 'dxf-parser';
-import { Cartesian3, Color, Entity } from 'cesium';
+import { Cartesian3, Color } from 'cesium';
 import { getCesiumViewer } from '../viewers/cesium/CesiumViewer';
-import { flyTo, removeEntitiesByPrefix, requestRender } from '../viewers/cesium/CesiumAdapter';
+import { flyTo, requestRender } from '../viewers/cesium/CesiumAdapter';
+import {
+  createVectorLayer,
+  addPolyline,
+  addPoint,
+  setVectorVisibility,
+  setVectorSymbology,
+  removeVectorLayer,
+} from '../viewers/cesium/VectorPrimitiveRegistry';
 import { useLayerStore } from '../stores/useLayerStore';
 import { useViewerStore } from '../stores/useViewerStore';
 import type { LoadResult, IFileLoader } from './FileFormatRegistry';
@@ -190,8 +198,9 @@ export async function loadDxfFile(filePath: string): Promise<DxfLoadResult> {
     console.log(`[DxfLoader] Parsed ${totalEntities} entities from ${fileName}`);
     console.log(`[DxfLoader] Layers: ${Object.keys(dxf.tables?.layer?.layers || {}).join(', ')}`);
 
-    // ── Step 3: Transform and render entities ──
+    // ── Step 3: Transform and render via batched primitive collections ──
     status(`${fileName}: ${totalEntities.toLocaleString()}개 엔티티 렌더링 중...`);
+    createVectorLayer(layerId);
 
     let rendered = 0;
     let minLon = Infinity, minLat = Infinity, maxLon = -Infinity, maxLat = -Infinity;
@@ -202,7 +211,6 @@ export async function loadDxfFile(filePath: string): Promise<DxfLoadResult> {
       if (lat > maxLat) maxLat = lat;
     };
 
-    // Process in batches to allow UI updates
     const BATCH_SIZE = 2000;
     for (let batchStart = 0; batchStart < totalEntities; batchStart += BATCH_SIZE) {
       const batchEnd = Math.min(batchStart + BATCH_SIZE, totalEntities);
@@ -212,7 +220,6 @@ export async function loadDxfFile(filePath: string): Promise<DxfLoadResult> {
         const entity = dxf.entities[i];
         const layerName = entity.layer || '0';
         const color = getLayerColor(layerName);
-        const entityId = `${layerId}_e${i}`;
 
         try {
           switch (entity.type) {
@@ -221,17 +228,9 @@ export async function loadDxfFile(filePath: string): Promise<DxfLoadResult> {
               const end = tmToWgs84(entity.vertices[1].x, entity.vertices[1].y);
               updateBounds(start.lon, start.lat);
               updateBounds(end.lon, end.lat);
-              viewer.entities.add({
-                id: entityId,
-                polyline: {
-                  positions: Cartesian3.fromDegreesArray([
-                    start.lon, start.lat, end.lon, end.lat,
-                  ]),
-                  width: 1.5,
-                  material: color,
-                  clampToGround: false,
-                },
-              });
+              addPolyline(layerId, Cartesian3.fromDegreesArray([
+                start.lon, start.lat, end.lon, end.lat,
+              ]), color, 1.5);
               rendered++;
               break;
             }
@@ -246,20 +245,11 @@ export async function loadDxfFile(filePath: string): Promise<DxfLoadResult> {
                 degreesArr.push(wgs.lon, wgs.lat);
                 updateBounds(wgs.lon, wgs.lat);
               }
-              // Close if flagged or if shape is closed
               if ((entity as any).shape || (entity as any).isClosed) {
                 const first = tmToWgs84(verts[0].x, verts[0].y);
                 degreesArr.push(first.lon, first.lat);
               }
-              viewer.entities.add({
-                id: entityId,
-                polyline: {
-                  positions: Cartesian3.fromDegreesArray(degreesArr),
-                  width: 1.5,
-                  material: color,
-                  clampToGround: false,
-                },
-              });
+              addPolyline(layerId, Cartesian3.fromDegreesArray(degreesArr), color, 1.5);
               rendered++;
               break;
             }
@@ -267,92 +257,63 @@ export async function loadDxfFile(filePath: string): Promise<DxfLoadResult> {
             case 'POINT': {
               const wgs = tmToWgs84(entity.position.x, entity.position.y);
               updateBounds(wgs.lon, wgs.lat);
-              viewer.entities.add({
-                id: entityId,
-                position: Cartesian3.fromDegrees(wgs.lon, wgs.lat),
-                point: {
-                  pixelSize: 4,
-                  color,
-                  outlineColor: Color.BLACK,
-                  outlineWidth: 1,
-                },
-              });
+              addPoint(layerId, Cartesian3.fromDegrees(wgs.lon, wgs.lat), color, 4);
               rendered++;
               break;
             }
 
             case 'CIRCLE': {
-              const center = tmToWgs84(entity.center.x, entity.center.y);
-              updateBounds(center.lon, center.lat);
-              // Approximate circle as polyline with 24 segments
               const radius = entity.radius || 1;
-              const circlePoints: number[] = [];
+              const circleCoords: number[] = [];
               for (let a = 0; a <= 360; a += 15) {
                 const rad = (a * Math.PI) / 180;
                 const cx = entity.center.x + radius * Math.cos(rad);
                 const cy = entity.center.y + radius * Math.sin(rad);
                 const pt = tmToWgs84(cx, cy);
-                circlePoints.push(pt.lon, pt.lat);
+                circleCoords.push(pt.lon, pt.lat);
               }
-              viewer.entities.add({
-                id: entityId,
-                polyline: {
-                  positions: Cartesian3.fromDegreesArray(circlePoints),
-                  width: 1.5,
-                  material: color,
-                  clampToGround: false,
-                },
-              });
+              const cWgs = tmToWgs84(entity.center.x, entity.center.y);
+              updateBounds(cWgs.lon, cWgs.lat);
+              addPolyline(layerId, Cartesian3.fromDegreesArray(circleCoords), color, 1.5);
               rendered++;
               break;
             }
 
             case 'ARC': {
-              const arcCenter = tmToWgs84(entity.center.x, entity.center.y);
-              updateBounds(arcCenter.lon, arcCenter.lat);
               const arcRadius = entity.radius || 1;
               let startAngle = entity.startAngle || 0;
               let endAngle = entity.endAngle || 360;
               if (endAngle < startAngle) endAngle += 360;
-              const arcPoints: number[] = [];
-              const step = 5; // degrees per segment
-              for (let a = startAngle; a <= endAngle; a += step) {
+              const arcCoords: number[] = [];
+              for (let a = startAngle; a <= endAngle; a += 5) {
                 const rad = (a * Math.PI) / 180;
                 const cx = entity.center.x + arcRadius * Math.cos(rad);
                 const cy = entity.center.y + arcRadius * Math.sin(rad);
                 const pt = tmToWgs84(cx, cy);
-                arcPoints.push(pt.lon, pt.lat);
+                arcCoords.push(pt.lon, pt.lat);
               }
-              if (arcPoints.length >= 4) {
-                viewer.entities.add({
-                  id: entityId,
-                  polyline: {
-                    positions: Cartesian3.fromDegreesArray(arcPoints),
-                    width: 1.5,
-                    material: color,
-                    clampToGround: false,
-                  },
-                });
+              const aWgs = tmToWgs84(entity.center.x, entity.center.y);
+              updateBounds(aWgs.lon, aWgs.lat);
+              if (arcCoords.length >= 4) {
+                addPolyline(layerId, Cartesian3.fromDegreesArray(arcCoords), color, 1.5);
                 rendered++;
               }
               break;
             }
 
-            // Skip TEXT/MTEXT/INSERT for now (performance — too many labels)
             default:
               break;
           }
-        } catch (err) {
-          // Skip individual entity errors silently
+        } catch {
+          // Skip individual entity errors
         }
       }
 
-      // Yield to UI thread
       await new Promise((r) => setTimeout(r, 0));
     }
 
-    viewer.scene.requestRender();
-    console.log(`[DxfLoader] Rendered ${rendered}/${totalEntities} entities`);
+    requestRender();
+    console.log(`[DxfLoader] Rendered ${rendered}/${totalEntities} primitives (batched)`);
 
     // ── Step 4: Add bounding box ──
     if (minLon < maxLon && minLat < maxLat) {
@@ -407,59 +368,18 @@ export async function loadDxfFile(filePath: string): Promise<DxfLoadResult> {
   }
 }
 
-// ─── Entity Lifecycle ────────────────────────────────────────────────────────
+// ─── Lifecycle (using VectorPrimitiveRegistry) ──────────────────────────────
 
-/**
- * Toggle visibility for all entities belonging to a DXF layer.
- */
 export function setDxfVisibility(layerId: string, visible: boolean): void {
-  const viewer = getCesiumViewer();
-  if (!viewer) return;
-  const prefix = `${layerId}_`;
-  for (let i = viewer.entities.values.length - 1; i >= 0; i--) {
-    const entity = viewer.entities.values[i];
-    if (entity.id && entity.id.startsWith(prefix)) {
-      entity.show = visible;
-    }
-  }
-  viewer.scene.requestRender();
+  setVectorVisibility(layerId, visible);
 }
 
-/**
- * Apply symbology to all entities belonging to a DXF layer.
- */
 export function setDxfSymbology(layerId: string, symbology: LayerSymbology): void {
-  const viewer = getCesiumViewer();
-  if (!viewer) return;
-  const prefix = `${layerId}_`;
-  const isOverride = symbology.color.toUpperCase() !== '#FFFFFF';
-  const overrideColor = isOverride
-    ? Color.fromCssColorString(symbology.color).withAlpha(symbology.opacity)
-    : null;
-
-  for (const entity of viewer.entities.values) {
-    if (!entity.id || !entity.id.startsWith(prefix)) continue;
-    if (entity.polyline) {
-      if (overrideColor) {
-        (entity.polyline.material as any) = overrideColor;
-      }
-      (entity.polyline.width as any) = symbology.lineWidth;
-    }
-    if (entity.point) {
-      if (overrideColor) {
-        (entity.point.color as any) = overrideColor;
-      }
-      (entity.point.pixelSize as any) = symbology.pointSize;
-    }
-  }
-  viewer.scene.requestRender();
+  setVectorSymbology(layerId, symbology);
 }
 
-/**
- * Remove all entities belonging to a DXF layer from the viewer.
- */
 export function removeDxfEntities(layerId: string): void {
-  removeEntitiesByPrefix(`${layerId}_`);
+  removeVectorLayer(layerId);
 }
 
 /**
