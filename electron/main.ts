@@ -58,6 +58,19 @@ function createWindow() {
       : filePath;
     
     try {
+      // ── Check PNG disk cache first ──
+      const cacheKey = getCacheKey(normalizedPath);
+      const cachePath = path.join(CACHE_DIR, `${cacheKey}.png`);
+      ensureCacheDir();
+      if (fs.existsSync(cachePath)) {
+        console.log(`[geotiff-preview] Cache hit: ${cachePath}`);
+        sendGeotiffConvertProgress(100, 0, 0);
+        const cachedPng = fs.readFileSync(cachePath);
+        return new Response(new Uint8Array(cachedPng), {
+          headers: { 'Content-Type': 'image/png' },
+        });
+      }
+
       console.log(`[geotiff-preview] Converting: ${normalizedPath}`);
       const MAX_DIM = 8192;
 
@@ -128,7 +141,15 @@ function createWindow() {
       sendGeotiffConvertProgress(100, totalBytes, totalBytes);
       
       console.log(`[geotiff-preview] Converted to PNG: ${(pngBuffer.length / 1024 / 1024).toFixed(1)} MB (white→transparent)`);
-      
+
+      // ── Write to disk cache for next time ──
+      try {
+        fs.writeFileSync(cachePath, pngBuffer);
+        console.log(`[geotiff-preview] Cached to: ${cachePath}`);
+      } catch (cacheErr) {
+        console.warn('[geotiff-preview] Cache write failed:', cacheErr);
+      }
+
       return new Response(new Uint8Array(pngBuffer), {
         headers: { 'Content-Type': 'image/png' },
       });
@@ -435,6 +456,92 @@ ipcMain.handle('file:listSiblingFiles', async (_event, filePath: string) => {
   } catch (err) {
     console.error('Failed to list sibling files:', err);
     return {};
+  }
+});
+
+// ── GLB / GeoTIFF Disk Cache ──
+const CACHE_DIR = path.join(app.getPath('userData'), 'cache');
+
+function getCacheKey(filePath: string): string {
+  // Hash: file path + last modified time
+  const crypto = require('crypto');
+  try {
+    const stat = fs.statSync(filePath);
+    const raw = `${filePath}|${stat.mtimeMs}`;
+    return crypto.createHash('md5').update(raw).digest('hex');
+  } catch {
+    const raw = filePath;
+    return crypto.createHash('md5').update(raw).digest('hex');
+  }
+}
+
+function ensureCacheDir(): void {
+  if (!fs.existsSync(CACHE_DIR)) {
+    fs.mkdirSync(CACHE_DIR, { recursive: true });
+  }
+}
+
+ipcMain.handle('cache:readGlb', async (_event, filePath: string) => {
+  try {
+    ensureCacheDir();
+    const key = getCacheKey(filePath);
+    const cachePath = path.join(CACHE_DIR, `${key}.glb`);
+    if (fs.existsSync(cachePath)) {
+      const buf = fs.readFileSync(cachePath);
+      return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+    }
+    return null;
+  } catch {
+    return null;
+  }
+});
+
+ipcMain.handle('cache:writeGlb', async (_event, filePath: string, glbBuffer: ArrayBuffer) => {
+  try {
+    ensureCacheDir();
+    const key = getCacheKey(filePath);
+    const cachePath = path.join(CACHE_DIR, `${key}.glb`);
+    fs.writeFileSync(cachePath, Buffer.from(glbBuffer));
+    return true;
+  } catch {
+    return false;
+  }
+});
+
+ipcMain.handle('cache:readPng', async (_event, filePath: string) => {
+  try {
+    ensureCacheDir();
+    const key = getCacheKey(filePath);
+    const cachePath = path.join(CACHE_DIR, `${key}.png`);
+    if (fs.existsSync(cachePath)) {
+      return cachePath;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+});
+
+ipcMain.handle('cache:writePng', async (_event, filePath: string, pngPath: string) => {
+  try {
+    ensureCacheDir();
+    const key = getCacheKey(filePath);
+    const cachePath = path.join(CACHE_DIR, `${key}.png`);
+    fs.copyFileSync(pngPath, cachePath);
+    return cachePath;
+  } catch {
+    return null;
+  }
+});
+
+ipcMain.handle('cache:hasPng', async (_event, filePath: string) => {
+  try {
+    ensureCacheDir();
+    const key = getCacheKey(filePath);
+    const cachePath = path.join(CACHE_DIR, `${key}.png`);
+    return fs.existsSync(cachePath) ? cachePath : null;
+  } catch {
+    return null;
   }
 });
 

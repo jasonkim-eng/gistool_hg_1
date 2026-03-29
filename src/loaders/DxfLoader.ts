@@ -1,4 +1,4 @@
-import DxfParser from 'dxf-parser';
+// DxfParser is lazy-imported inside loadDxfFile to reduce initial bundle size
 import { Cartesian3, Color } from 'cesium';
 import { getCesiumViewer } from '../viewers/cesium/CesiumViewer';
 import { flyTo, requestRender } from '../viewers/cesium/CesiumAdapter';
@@ -188,6 +188,7 @@ export async function loadDxfFile(filePath: string): Promise<DxfLoadResult> {
 
     // ── Step 2: Parse DXF ──
     status(`${fileName}: DXF 구조 파싱 중 (${sizeMB}MB)...`);
+    const DxfParser = (await import('dxf-parser')).default;
     const parser = new DxfParser();
     const dxf = parser.parseSync(dxfText);
     if (!dxf || !dxf.entities || dxf.entities.length === 0) {

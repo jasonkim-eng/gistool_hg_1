@@ -5,13 +5,10 @@
  */
 
 import * as THREE from 'three';
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
-import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
-import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
-import { TDSLoader } from 'three/examples/jsm/loaders/TDSLoader.js';
-import { PLYLoader } from 'three/examples/jsm/loaders/PLYLoader.js';
-import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 import { Cartesian3 } from 'cesium';
+
+// Format-specific loaders are lazy-imported inside parseWithThreeJS
+// to reduce initial bundle size (~200KB saved on startup)
 
 import {
   parseWGS84Origin,
@@ -45,21 +42,20 @@ async function parseWithThreeJS(
   if (ext === '.obj') {
     return parseOBJWithMaterials(objText, baseDir);
   } else if (ext === '.fbx') {
+    const { FBXLoader } = await import('three/examples/jsm/loaders/FBXLoader.js');
     return new Promise((resolve, reject) => {
       try {
-        const loader = new FBXLoader();
-        const result = loader.parse(buffer, '');
-        resolve(result);
+        resolve(new FBXLoader().parse(buffer, ''));
       } catch (err) {
         reject(err);
       }
     });
   } else if (ext === '.3ds') {
-    const loader = new TDSLoader();
-    return loader.parse(buffer, '');
+    const { TDSLoader } = await import('three/examples/jsm/loaders/TDSLoader.js');
+    return new TDSLoader().parse(buffer, '');
   } else if (ext === '.ply') {
-    const loader = new PLYLoader();
-    const geometry = loader.parse(buffer);
+    const { PLYLoader } = await import('three/examples/jsm/loaders/PLYLoader.js');
+    const geometry = new PLYLoader().parse(buffer);
     const hasVertexColors = geometry.hasAttribute('color');
     const material = new THREE.MeshStandardMaterial({
       color: MODEL_DEFAULTS.DEFAULT_MATERIAL_COLOR,
@@ -73,8 +69,8 @@ async function parseWithThreeJS(
     group.add(mesh);
     return group;
   } else if (ext === '.stl') {
-    const loader = new STLLoader();
-    const geometry = loader.parse(buffer);
+    const { STLLoader } = await import('three/examples/jsm/loaders/STLLoader.js');
+    const geometry = new STLLoader().parse(buffer);
     const material = new THREE.MeshStandardMaterial({
       color: MODEL_DEFAULTS.DEFAULT_MATERIAL_COLOR,
       metalness: MODEL_DEFAULTS.DEFAULT_METALNESS,
@@ -94,8 +90,11 @@ async function parseWithThreeJS(
  * Parse OBJ with MTL materials and textures from the same directory.
  */
 async function parseOBJWithMaterials(objText: string, baseDir: string): Promise<THREE.Group> {
+  const { OBJLoader } = await import('three/examples/jsm/loaders/OBJLoader.js');
+  const { MTLLoader } = await import('three/examples/jsm/loaders/MTLLoader.js');
+
   const mtlMatch = objText.match(/^\s*mtllib\s+(.+)$/m);
-  let materials: MTLLoader.MaterialCreator | null = null;
+  let materials: any = null;
 
   if (mtlMatch && window.api?.file) {
     const mtlFilename = mtlMatch[1].trim();

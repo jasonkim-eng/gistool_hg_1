@@ -30,6 +30,13 @@ declare global {
         offConvertProgress: (cb: (data: { percent: number; bytesRead?: number; totalBytes?: number }) => void) => void;
         removeAllConvertProgress: () => void;
       };
+      cache: {
+        readGlb: (filePath: string) => Promise<ArrayBuffer | null>;
+        writeGlb: (filePath: string, glbBuffer: ArrayBuffer) => Promise<boolean>;
+        hasPng: (filePath: string) => Promise<string | null>;
+        readPng: (filePath: string) => Promise<string | null>;
+        writePng: (filePath: string, pngPath: string) => Promise<string | null>;
+      };
       system: {
         platform: string;
       };

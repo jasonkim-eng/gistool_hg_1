@@ -38,6 +38,18 @@ contextBridge.exposeInMainWorld('api', {
     removeAllConvertProgress: () =>
       ipcRenderer.removeAllListeners('geotiff:convertProgress'),
   },
+  cache: {
+    readGlb: (filePath: string): Promise<ArrayBuffer | null> =>
+      ipcRenderer.invoke('cache:readGlb', filePath),
+    writeGlb: (filePath: string, glbBuffer: ArrayBuffer): Promise<boolean> =>
+      ipcRenderer.invoke('cache:writeGlb', filePath, glbBuffer),
+    hasPng: (filePath: string): Promise<string | null> =>
+      ipcRenderer.invoke('cache:hasPng', filePath),
+    readPng: (filePath: string): Promise<string | null> =>
+      ipcRenderer.invoke('cache:readPng', filePath),
+    writePng: (filePath: string, pngPath: string): Promise<string | null> =>
+      ipcRenderer.invoke('cache:writePng', filePath, pngPath),
+  },
   system: {
     platform: process.platform,
     getInfo: (): Promise<{

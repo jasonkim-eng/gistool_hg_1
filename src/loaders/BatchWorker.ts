@@ -51,37 +51,60 @@ export async function loadSingleOBJ(
 ): Promise<string> {
   if (signal.aborted) throw new Error('Cancelled');
 
-  const objText = await window.api.file.readText(filePath);
-  if (!objText) throw new Error('Failed to read OBJ');
-  if (signal.aborted) throw new Error('Cancelled');
+  // ── Try GLB disk cache first (skip entire Three.js pipeline) ──
+  let glbBuffer: ArrayBuffer | null = null;
+  let geoRef: { lat: number; lon: number; alt: number } | null = null;
+  let fromCache = false;
 
-  const geoRef = parseWGS84OriginFast(objText);
-  const threeScene = await parseOBJFast(objText, baseDir, signal);
-  if (signal.aborted) throw new Error('Cancelled');
+  if (window.api?.cache) {
+    const cached = await window.api.cache.readGlb(filePath);
+    if (cached) {
+      glbBuffer = cached;
+      fromCache = true;
+      // Still need geo-ref from header — read just first 2KB
+      const header = await window.api.file.readHeader(filePath, BATCH.HEADER_BYTES);
+      if (header) geoRef = parseWGS84OriginFast(header);
+    }
+  }
 
-  // Z-up → Y-up rotation for GIS OBJ
-  threeScene.rotation.x = -Math.PI / 2;
-  threeScene.updateMatrixWorld(true);
+  if (!glbBuffer) {
+    // ── Full parse pipeline (no cache hit) ──
+    const objText = await window.api.file.readText(filePath);
+    if (!objText) throw new Error('Failed to read OBJ');
+    if (signal.aborted) throw new Error('Cancelled');
 
-  const rotatedBox = new THREE.Box3().setFromObject(threeScene);
-  const rotatedCenter = rotatedBox.getCenter(new THREE.Vector3());
+    geoRef = parseWGS84OriginFast(objText);
+    const threeScene = await parseOBJFast(objText, baseDir, signal);
+    if (signal.aborted) throw new Error('Cancelled');
 
-  const wrapper = new THREE.Group();
-  threeScene.position.set(-rotatedCenter.x, -rotatedCenter.y, -rotatedCenter.z);
-  wrapper.add(threeScene);
-  wrapper.updateMatrixWorld(true);
+    threeScene.rotation.x = -Math.PI / 2;
+    threeScene.updateMatrixWorld(true);
 
-  prepareForExport(wrapper);
+    const rotatedBox = new THREE.Box3().setFromObject(threeScene);
+    const rotatedCenter = rotatedBox.getCenter(new THREE.Vector3());
 
-  const glbBuffer = await exportToGLB(wrapper);
-  if (signal.aborted) throw new Error('Cancelled');
+    const wrapper = new THREE.Group();
+    threeScene.position.set(-rotatedCenter.x, -rotatedCenter.y, -rotatedCenter.z);
+    wrapper.add(threeScene);
+    wrapper.updateMatrixWorld(true);
+
+    prepareForExport(wrapper);
+    glbBuffer = await exportToGLB(wrapper);
+    disposeThreeScene(wrapper);
+
+    if (signal.aborted) throw new Error('Cancelled');
+
+    // Write to cache in background (non-blocking)
+    if (window.api?.cache) {
+      window.api.cache.writeGlb(filePath, glbBuffer).catch(() => {});
+    }
+  }
 
   const modelLon = geoRef?.lon ?? DEFAULT_GEO.MODEL_LON;
   const modelLat = geoRef?.lat ?? DEFAULT_GEO.MODEL_LAT;
   const modelAlt = geoRef?.alt ?? DEFAULT_GEO.MODEL_ALT;
   const layerId = generateId();
 
-  // Respect parent group's current visibility
   const groupLayer = useLayerStore.getState().layers.find((l) => l.id === groupId);
   const groupVisible = groupLayer?.visible ?? true;
 
@@ -108,8 +131,6 @@ export async function loadSingleOBJ(
   if (pendingLayers.length >= BATCH.LAYER_FLUSH_INTERVAL) {
     flushPendingLayers();
   }
-
-  disposeThreeScene(wrapper);
   return layerId;
 }
 
