@@ -20,7 +20,7 @@ import 'cesium/Build/Cesium/Widgets/widgets.css';
 import { useViewerStore } from '../../stores/useViewerStore';
 import { useLayerStore } from '../../stores/useLayerStore';
 import { useContextMenuStore } from '../../stores/useContextMenuStore';
-import { findLayerIdFromPick } from './CesiumModelRegistry';
+import { findLayerIdFromPick, startDistanceCulling } from './CesiumModelRegistry';
 import { DEFAULT_GEO } from '../../config/defaults';
 
 // Singleton viewer reference accessible from outside React
@@ -70,8 +70,10 @@ const CesiumViewer: React.FC = () => {
         // ★ Ellipsoid terrain (no Ion terrain fetch)
         terrainProvider: new EllipsoidTerrainProvider(),
 
-        // Performance (VIW-313)
-        targetFrameRate: 60,
+        // Performance — request-render mode enabled below
+        targetFrameRate: 30,
+        requestRenderMode: true,
+        maximumRenderTimeChange: Infinity,
 
         // Scene
         sceneMode: SceneMode.SCENE3D,
@@ -79,7 +81,7 @@ const CesiumViewer: React.FC = () => {
         contextOptions: {
           webgl: {
             alpha: false,
-            antialias: true,
+            antialias: false,
             preserveDrawingBuffer: false,
             powerPreference: 'high-performance',
           },
@@ -103,6 +105,13 @@ const CesiumViewer: React.FC = () => {
       // Logarithmic depth buffer to prevent Z-fighting (STR-332)
       viewer.scene.logarithmicDepthBuffer = true;
 
+      // ── Low-spec GPU optimizations ──
+      viewer.scene.postProcessStages.fxaa.enabled = false;
+      viewer.scene.highDynamicRange = false;
+      viewer.scene.globe.tileCacheSize = 50;
+      viewer.scene.globe.maximumScreenSpaceError = 4;
+      viewer.resolutionScale = 0.85;
+
       // Suppress rendering errors gracefully
       viewer.scene.renderError.addEventListener((_scene: any, error: any) => {
         console.warn('CesiumJS render warning (suppressed):', error?.message || error);
@@ -114,9 +123,15 @@ const CesiumViewer: React.FC = () => {
         duration: 0,
       });
 
-      // ── Mouse move → 3D coordinates ──
+      // ── Mouse move → 3D coordinates (throttled to 20fps for performance) ──
       const handler = new ScreenSpaceEventHandler(viewer.scene.canvas);
+      let lastMoveTime = 0;
+      const MOUSE_THROTTLE_MS = 50;
       handler.setInputAction((movement: { endPosition: Cartesian2 }) => {
+        const now = performance.now();
+        if (now - lastMoveTime < MOUSE_THROTTLE_MS) return;
+        lastMoveTime = now;
+
         const ray = viewer.camera.getPickRay(movement.endPosition);
         if (ray) {
           const globePos = viewer.scene.globe.pick(ray, viewer.scene);
@@ -207,6 +222,9 @@ const CesiumViewer: React.FC = () => {
 
       viewerRef.current = viewer;
       viewerInstance = viewer;
+
+      // Start distance-based model culling for 10k+ OBJ scenes
+      startDistanceCulling();
 
       // Store cleanup references
       (viewer as any).__cleanup = { postRenderListener, handler };

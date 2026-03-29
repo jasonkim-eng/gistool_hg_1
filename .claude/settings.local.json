@@ -18,7 +18,8 @@
       "Bash(ls C:/workspace/GIS_tool_3/node_modules/three/examples/jsm/loaders/TDSLoader*)",
       "Bash(ls C:/workspace/GIS_tool_3/node_modules/three/examples/jsm/loaders/PLYLoader*)",
       "Bash(ls C:/workspace/GIS_tool_3/node_modules/three/examples/jsm/loaders/STLLoader*)",
-      "Bash(grep -l \"GeoJsonDataSource\\\\|KmlDataSource\" C:/workspace/GIS_tool_3/node_modules/cesium/Source/DataSources/*.js)"
+      "Bash(grep -l \"GeoJsonDataSource\\\\|KmlDataSource\" C:/workspace/GIS_tool_3/node_modules/cesium/Source/DataSources/*.js)",
+      "WebSearch"
     ]
   }
 }

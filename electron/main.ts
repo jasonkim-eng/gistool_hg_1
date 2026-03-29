@@ -30,8 +30,11 @@ app.commandLine.appendSwitch('use-angle', 'd3d11on12');
 app.commandLine.appendSwitch('disable-gpu-sandbox');
 // Enable hardware-accelerated video decode
 app.commandLine.appendSwitch('enable-accelerated-video-decode');
-// V8 memory limit for large datasets
-app.commandLine.appendSwitch('js-flags', '--max-old-space-size=8192');
+// V8 memory limit — adaptive based on system RAM
+const totalRAMgb = Math.round(os.totalmem() / (1024 ** 3));
+const heapSize = totalRAMgb <= 8 ? 4096 : totalRAMgb <= 16 ? 6144 : 8192;
+app.commandLine.appendSwitch('js-flags', `--max-old-space-size=${heapSize} --optimize-for-size`);
+console.log(`[Main] System RAM: ${totalRAMgb}GB → V8 heap: ${heapSize}MB`);
 
 let mainWindow: BrowserWindow | null = null;
 

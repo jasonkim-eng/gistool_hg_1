@@ -3,9 +3,10 @@
  * Provides both forward (layerId → Model) and reverse (Model → layerId) lookups.
  */
 
-import { Model, Color, ColorBlendMode } from 'cesium';
+import { Model, Color, ColorBlendMode, Cartesian3, Cartographic, Math as CesiumMath } from 'cesium';
 import { getCesiumViewer } from './CesiumViewer';
 import type { LayerSymbology } from '../../types/symbology';
+import { useLayerStore } from '../../stores/useLayerStore';
 
 /** Active highlight timer — tracks current flash animation */
 let highlightTimer: ReturnType<typeof setTimeout> | null = null;
@@ -214,4 +215,72 @@ export function highlightModel(layerId: string): void {
   }
 
   blink();
+}
+
+// ═══ Distance-Based Culling ═══
+
+const MAX_VISIBLE_MODELS = 500;
+const CULL_DEBOUNCE_MS = 1000;
+let cullTimer: ReturnType<typeof setTimeout> | null = null;
+let cullListenerActive = false;
+
+/**
+ * Start distance-based model culling.
+ * Hides models far from camera, keeping at most MAX_VISIBLE_MODELS visible.
+ * Call once after viewer is initialized.
+ */
+export function startDistanceCulling(): void {
+  const viewer = getCesiumViewer();
+  if (!viewer || cullListenerActive) return;
+
+  const onCameraChange = () => {
+    if (cullTimer) clearTimeout(cullTimer);
+    cullTimer = setTimeout(() => performCull(), CULL_DEBOUNCE_MS);
+  };
+
+  viewer.camera.changed.addEventListener(onCameraChange);
+  viewer.camera.moveEnd.addEventListener(onCameraChange);
+  cullListenerActive = true;
+}
+
+function performCull(): void {
+  const viewer = getCesiumViewer();
+  if (!viewer || registry.size <= MAX_VISIBLE_MODELS) return;
+
+  const cameraPos = viewer.camera.positionWC;
+  const layers = useLayerStore.getState().layers;
+
+  // Build distance list for all registered models
+  const distances: { layerId: string; dist: number; visible: boolean }[] = [];
+  for (const [layerId, model] of registry) {
+    const layer = layers.find((l) => l.id === layerId);
+    if (!layer || !layer.visible) continue; // skip user-hidden layers
+
+    const modelPos = model.modelMatrix
+      ? Cartesian3.fromElements(
+          model.modelMatrix[12],
+          model.modelMatrix[13],
+          model.modelMatrix[14],
+        )
+      : cameraPos;
+
+    const dist = Cartesian3.distance(cameraPos, modelPos);
+    distances.push({ layerId, dist, visible: model.show });
+  }
+
+  // Sort by distance (nearest first)
+  distances.sort((a, b) => a.dist - b.dist);
+
+  // Show nearest MAX_VISIBLE_MODELS, hide the rest
+  let changed = false;
+  for (let i = 0; i < distances.length; i++) {
+    const shouldShow = i < MAX_VISIBLE_MODELS;
+    const model = registry.get(distances[i].layerId);
+    if (model && model.show !== shouldShow) {
+      model.show = shouldShow;
+      changed = true;
+    }
+  }
+
+  if (changed) viewer.scene.requestRender();
 }

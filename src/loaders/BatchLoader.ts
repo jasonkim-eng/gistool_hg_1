@@ -206,6 +206,8 @@ async function backgroundLoadAll(
   const queue = sortedEntries.map((e) => e.filePath);
   let loaded = 0;
   let failed = 0;
+  let lastProgressUpdate = 0;
+  const PROGRESS_THROTTLE_MS = 500;
 
   console.log(`[BatchLoader] Phase 2: Background loading ${queue.length} files (${BATCH.MAX_CONCURRENT} workers)`);
 
@@ -216,7 +218,14 @@ async function backgroundLoadAll(
         if (success) loaded++;
         else failed++;
 
-        useBatchStore.getState().updateProgress(loaded, failed, filename);
+        // Throttle Zustand updates to reduce re-renders
+        const now = performance.now();
+        const processed = loaded + failed;
+        const isLast = processed === sortedEntries.length;
+        if (now - lastProgressUpdate >= PROGRESS_THROTTLE_MS || isLast) {
+          lastProgressUpdate = now;
+          useBatchStore.getState().updateProgress(loaded, failed, filename);
+        }
 
         const entry = sortedEntries.find((e) => e.fileName === filename);
         if (entry) {
@@ -227,8 +236,7 @@ async function backgroundLoadAll(
           }
         }
 
-        const processed = loaded + failed;
-        if (processed % BATCH.RENDER_FLUSH_INTERVAL === 0 || processed === sortedEntries.length) {
+        if (processed % BATCH.RENDER_FLUSH_INTERVAL === 0 || isLast) {
           flushPendingLayers();
           requestRender();
 
